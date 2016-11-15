@@ -51,6 +51,29 @@
             return string.IsNullOrEmpty(classValue) ? Enumerable.Empty<string>() : classValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
+        private static bool HasAttribute(this HtmlNode node, string attributeName)
+        {
+            return node.HasAttributes && node.Attributes.Contains(attributeName);
+        }
 
+        public static bool HasAttributeValue(this HtmlNode node, string attributeName, string value)
+        {
+            return node.HasAttribute(attributeName) && node.Attributes[attributeName].Value == value;
+        }
+
+        public static bool HasAttributeValue(this HtmlNode node, string attributeName, IEnumerable<string> value)
+        {
+            return node.HasAttribute(attributeName) && value.Any(x => x == node.Attributes[attributeName].Value);
+        }
+
+        public static bool HasClassValue(this HtmlNode node, string value)
+        {
+            return node.HasAttribute(ClassAttribute) && node.Attributes[ClassAttribute].Value.Contains(value);
+        }
+
+        public static bool HasClassValue(this HtmlNode node, IEnumerable<string> value)
+        {
+            return node.HasAttribute(ClassAttribute) && value.Any(x => node.Attributes[ClassAttribute].Value.Contains(x));
+        }
     }
 }

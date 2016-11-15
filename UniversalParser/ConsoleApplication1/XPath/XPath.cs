@@ -13,6 +13,8 @@
             Nodes = nodes;
         }
 
+        public int NodeCount => Nodes.Length;
+
         public string GetXpath(bool useId, bool useClass)
         {
             var ret = new StringBuilder();

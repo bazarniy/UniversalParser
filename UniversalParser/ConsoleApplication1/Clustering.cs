@@ -7,64 +7,65 @@ using System.Threading.Tasks;
 namespace ConsoleApplication1
 {
     using System.Collections.Concurrent;
+    using System.IO;
+    using Base;
     using Base.Helpers;
     using Base.Utilities;
     using HtmlAgilityPack;
     using XPath;
 
-
-    /*public class Clusterization
+    public interface IDataReader
     {
-        public XPath.XPath GetContentNode(Catalog project, int percentFilter = 20)
+        IEnumerable<string> GetFileNames();
+        DataInfo GetFile(string file);
+    }
+
+    public class Clusterization
+    {
+        public XPath.XPath GetContentNode(IDataReader project, int percentFilter = 20)
         {
-            var gl = this.GetGlobalContentNodes(project, percentFilter);
+            var gl = GetGlobalContentNodes(project, percentFilter);
             var y = gl
-                .Where(pair => pair.Value.InnerP && pair.Value.InnerH.Any(x => x) && pair.Value.InnerTable)
+                .Where(pair => pair.Value.HasPTag && pair.Value.HasHTag && pair.Value.HasTableTag)
                 .Select(x => x.Key)
                 .ToList();
-            var max = y.Max(x => x.Nodes.Count);
-            return y.First(x => x.Nodes.Count == max);
+            var max = y.Max(x => x.NodeCount);
+            return y.First(x => x.NodeCount == max);
         }
 
-        private Dictionary<XPath.XPath, MinMaxPair> GetGlobalContentNodes(Catalog project, int percentFilter = 20)
+        private Dictionary<XPath.XPath, MinMaxPair> GetGlobalContentNodes(IDataReader storage, int percentFilter = 20)
         {
             var ret = new ConcurrentDictionary<XPath.XPath, MinMaxPair>();
 
-            Parallel.ForEach(project.Files, fileInfo =>
+            Parallel.ForEach(storage.GetFileNames(), fileName =>
             {
                 var html = new HtmlDocument();
-                using (var fileWrapper = project.GetFile(fileInfo))
-                {
-                    html.Load(fileWrapper.GetStream(false));
-                }
+                html.LoadHtml(storage.GetFile(fileName).Data);
 
-                var xpathInfos = this.GetMaxContentNodes(html.DocumentNode.Descendants(HtmlHelpers.BodyTag).FirstOrDefault(), fileInfo.FileName);
-                foreach (var xpathInfo in xpathInfos)
+                foreach (var xpathInfo in GetMaxContentNodes(html, fileName))
                 {
                     ret.AddOrUpdate(xpathInfo.Key, xpathInfo.Value, (key, oldValue) => oldValue.Merge(xpathInfo.Value));
                 }
             });
 
-            var sc = project.Files.Count();
+            var sc = storage.GetFileNames().Count();
             return ret
                 .Where(pair => pair.Value.Num * 100 / sc >= percentFilter) // процент содержания
                 .Where(pair => pair.Value.Min != pair.Value.Max) //min=max
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
-        private Dictionary<XPath.XPath, MinMaxPair> GetMaxContentNodes(HtmlNode rootnode, string fileName)
+        private Dictionary<XPath.XPath, MinMaxPair> GetMaxContentNodes(HtmlDocument html, string fileName)
         {
+            var rootnode = html.DocumentNode
+                .Descendants(HtmlHelpers.BodyTag)
+                .FirstOrDefault();
+
             var ret = new Dictionary<XPath.XPath, MinMaxPair>();
             if (rootnode == null)
             {
                 return ret;
             }
-
-            Func<HtmlNode, bool> filterChild = x =>
-                x.NodeType == HtmlNodeType.Element &&
-                !(x.ParentNode.Attributes.Contains(HtmlHelpers.ClassAttribute) &&
-                (x.ParentNode.Attributes[HtmlHelpers.ClassAttribute].Value == "header" || x.ParentNode.Attributes[HtmlHelpers.ClassAttribute].Value == "footer")
-                    );
 
             var stack = new Stack<HtmlNode>();
             stack.Push(rootnode);
@@ -73,11 +74,15 @@ namespace ConsoleApplication1
 
             while (stack.Any())
             {
-                var node = stack.Pop();
-                var children = node.ChildNodes.Where(x => filterChild(x)).ToArray();
-                foreach (var pair in this.GetMaxLengthNodes(children))
+                var children = stack.Pop()
+                    .ChildNodes
+                    .Where(FilterChildren)
+                    .GetMax(x => x.GetClearTextLength());
+
+                foreach (var pair in children)
                 {
                     stack.Push(pair.Key);
+
                     ret.Add(
                         manager.GetXPath(pair.Key),
                         new MinMaxPair
@@ -87,8 +92,8 @@ namespace ConsoleApplication1
                             Max = pair.Value,
                             MaxFile = fileName,
                             InnerH = pair.Key.ConaintsDescendants(HtmlHelpers.HTags).ToArray(),
-                            InnerP = pair.Key.ConaintsDescendants("p"),
-                            InnerTable = pair.Key.ConaintsDescendants("table")
+                            HasPTag = pair.Key.ConaintsDescendants("p"),
+                            HasTableTag = pair.Key.ConaintsDescendants("table")
                         }
                         );
                 }
@@ -96,18 +101,10 @@ namespace ConsoleApplication1
             return ret;
         }
 
-        private IEnumerable<KeyValuePair<HtmlNode, int>> GetMaxLengthNodes(HtmlNode[] children)
+        private static bool FilterChildren(HtmlNode node)
         {
-            if (children == null || children.Length == 0)
-            {
-                return Enumerable.Empty<KeyValuePair<HtmlNode, int>>();
-            }
-
-            var cache = children.ToDictionary(node => node, node => node.GetClearTextLength());
-            var max = cache.Values.Max();
-            return cache.Where(x => x.Value == max);
+            return node.NodeType == HtmlNodeType.Element && !node.HasClassValue(new[] { "header", "footer"});
         }
-
 
 
         private class MinMaxPair
@@ -118,33 +115,32 @@ namespace ConsoleApplication1
             public int Num = 0; //сколько раз встретил
             public string MaxFile = "";
             public bool[] InnerH = { false, false, false, false, false, false };
-            public bool InnerP = false;
-            public bool InnerTable = false;
+            public bool HasHTag => InnerH.Any(x => x);
+            public bool HasPTag = false;
+            public bool HasTableTag = false;
 
             public MinMaxPair Merge(MinMaxPair newValue)
             {
-                var result = CloneUtility.Clone(this);
-
-                if (newValue.Length < result.Min)
+                if (newValue.Length < Min)
                 {
-                    result.Min = newValue.Length;
+                    Min = newValue.Length;
                 }
-                else if (newValue.Length > result.Max)
+                else if (newValue.Length > Max)
                 {
-                    result.Max = newValue.Length;
-                    result.MaxFile = newValue.MaxFile;
+                    Max = newValue.Length;
+                    MaxFile = newValue.MaxFile;
                 }
-                result.Num++;
-                result.InnerH = newValue.InnerH;
-                result.InnerP |= newValue.InnerP;
-                result.InnerTable |= newValue.InnerTable;
-                return result;
+                Num++;
+                InnerH = newValue.InnerH;
+                HasPTag |= newValue.HasPTag;
+                HasTableTag |= newValue.HasTableTag;
+                return this;
             }
 
             public override string ToString()
             {
-                return string.Format("[{0}, {1}, {2}, {3}, {4}, {5}]", Min, Max, Num, this.InnerH.Any(x => x), InnerP, InnerTable);
+                return string.Format("[{0}, {1}, {2}, {3}, {4}, {5}]", Min, Max, Num, HasHTag, HasPTag, HasTableTag);
             }
         }
-    }*/
+    }
 }
