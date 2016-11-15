@@ -35,7 +35,7 @@ namespace ConsoleApplication1
 
         private Dictionary<XPath.XPath, MinMaxPair> GetGlobalContentNodes(IDataReader storage, int percentFilter = 20)
         {
-            var ret = new ConcurrentDictionary<XPath.XPath, MinMaxPair>();
+            var ret = new ConcurrentBag<MinMaxPair>();
 
             Parallel.ForEach(storage.GetFileNames(), fileName =>
             {
@@ -44,7 +44,15 @@ namespace ConsoleApplication1
 
                 foreach (var xpathInfo in GetMaxContentNodes(html, fileName))
                 {
-                    ret.AddOrUpdate(xpathInfo.Key, xpathInfo.Value, (key, oldValue) => oldValue.Merge(xpathInfo.Value));
+                    var result = ret.FirstOrDefault(x => x.XPath == xpathInfo.XPath);
+                    if (result != null)
+                    {
+                        result.Merge(xpathInfo);
+                    }
+                    else
+                    {
+                        ret.Add(xpathInfo);
+                    }
                 }
             });
 
@@ -55,40 +63,20 @@ namespace ConsoleApplication1
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
-        private Dictionary<XPath.XPath, MinMaxPair> GetMaxContentNodes(HtmlDocument html, string fileName)
+        private IEnumerable<MinMaxPair> GetMaxContentNodes(HtmlDocument html, string fileName)
         {
             var rootnode = html.GetBody();
-
-            var ret = new Dictionary<XPath.XPath, MinMaxPair>();
             if (rootnode == null)
             {
-                return ret;
+                return Enumerable.Empty<MinMaxPair>();
             }
 
             var manager = new XNodeManager();
-            var filteredChildren = rootnode
+            return rootnode
                 .GetAllTags()
                 .Where(FilterChildren)
-                .GetMax(x => x.GetClearTextLength());
-
-            foreach (var pair in filteredChildren)
-            {
-                ret.Add(
-                    manager.GetXPath(pair.Key),
-                    new MinMaxPair
-                    {
-                        Length = pair.Value,
-                        Min = pair.Value,
-                        Max = pair.Value,
-                        MaxFile = fileName,
-                        InnerH = pair.Key.ConaintsDescendants(HtmlHelpers.HTags).ToArray(),
-                        HasPTag = pair.Key.ConaintsDescendants("p"),
-                        HasTableTag = pair.Key.ConaintsDescendants("table")
-                    }
-                    );
-            }
-
-            return ret;
+                .GetMax(x => x.GetClearTextLength())
+                .Select(x => new MinMaxPair(x.Key, x.Value, fileName, manager));
         }
 
         private static bool FilterChildren(HtmlNode node)
@@ -99,6 +87,7 @@ namespace ConsoleApplication1
 
         private class MinMaxPair
         {
+            public XPath.XPath XPath;
             public int Length = 0;
             public int Min = -1;
             public int Max = -1;
@@ -108,6 +97,19 @@ namespace ConsoleApplication1
             public bool HasHTag => InnerH.Any(x => x);
             public bool HasPTag = false;
             public bool HasTableTag = false;
+
+            public MinMaxPair(HtmlNode node, int length, string fileName, XNodeManager manager)
+            {
+                XPath = manager.GetXPath(node);
+                Length = length;
+                Min = length;
+                Max = length;
+                MaxFile = fileName;
+                InnerH = node.ConaintsDescendants(HtmlHelpers.HTags).ToArray();
+                HasPTag = node.ConaintsDescendants("p");
+                HasTableTag = node.ConaintsDescendants("table");
+
+            }
 
             public MinMaxPair Merge(MinMaxPair newValue)
             {
