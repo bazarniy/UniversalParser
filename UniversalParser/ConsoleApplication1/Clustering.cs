@@ -57,9 +57,7 @@ namespace ConsoleApplication1
 
         private Dictionary<XPath.XPath, MinMaxPair> GetMaxContentNodes(HtmlDocument html, string fileName)
         {
-            var rootnode = html.DocumentNode
-                .Descendants(HtmlHelpers.BodyTag)
-                .FirstOrDefault();
+            var rootnode = html.GetBody();
 
             var ret = new Dictionary<XPath.XPath, MinMaxPair>();
             if (rootnode == null)
@@ -67,37 +65,29 @@ namespace ConsoleApplication1
                 return ret;
             }
 
-            var stack = new Stack<HtmlNode>();
-            stack.Push(rootnode);
-
             var manager = new XNodeManager();
+            var filteredChildren = rootnode
+                .GetAllTags()
+                .Where(FilterChildren)
+                .GetMax(x => x.GetClearTextLength());
 
-            while (stack.Any())
+            foreach (var pair in filteredChildren)
             {
-                var children = stack.Pop()
-                    .ChildNodes
-                    .Where(FilterChildren)
-                    .GetMax(x => x.GetClearTextLength());
-
-                foreach (var pair in children)
-                {
-                    stack.Push(pair.Key);
-
-                    ret.Add(
-                        manager.GetXPath(pair.Key),
-                        new MinMaxPair
-                        {
-                            Length = pair.Value,
-                            Min = pair.Value,
-                            Max = pair.Value,
-                            MaxFile = fileName,
-                            InnerH = pair.Key.ConaintsDescendants(HtmlHelpers.HTags).ToArray(),
-                            HasPTag = pair.Key.ConaintsDescendants("p"),
-                            HasTableTag = pair.Key.ConaintsDescendants("table")
-                        }
-                        );
-                }
+                ret.Add(
+                    manager.GetXPath(pair.Key),
+                    new MinMaxPair
+                    {
+                        Length = pair.Value,
+                        Min = pair.Value,
+                        Max = pair.Value,
+                        MaxFile = fileName,
+                        InnerH = pair.Key.ConaintsDescendants(HtmlHelpers.HTags).ToArray(),
+                        HasPTag = pair.Key.ConaintsDescendants("p"),
+                        HasTableTag = pair.Key.ConaintsDescendants("table")
+                    }
+                    );
             }
+
             return ret;
         }
 

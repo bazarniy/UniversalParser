@@ -75,5 +75,15 @@
         {
             return node.HasAttribute(ClassAttribute) && value.Any(x => node.Attributes[ClassAttribute].Value.Contains(x));
         }
+
+        public static HtmlNode GetBody(this HtmlDocument html)
+        {
+            return html.DocumentNode.Descendants(BodyTag).FirstOrDefault();
+        }
+
+        public static IEnumerable<HtmlNode> GetAllTags(this HtmlNode node)
+        {
+            return node.Descendants().Where(x => x.NodeType == HtmlNodeType.Element);
+        }
     }
 }
