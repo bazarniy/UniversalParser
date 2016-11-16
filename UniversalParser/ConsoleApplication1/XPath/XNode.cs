@@ -66,7 +66,7 @@
             return node != null && Name == node.Name && Id == node.Id && Class.ScrambledEquals(node.GetClasses());
         }
 
-        /*public override bool Equals(object obj)
+        public override bool Equals(object obj)
         {
             var node = obj as XNode;
             return node != null && Name == node.Name && Id == node.Id && Class.SequenceEqual(node.Class);
@@ -75,6 +75,6 @@
         public override int GetHashCode()
         {
             return Name.GetHashCode() ^ Id.GetHashCode();
-        }*/
+        }
     }
 }

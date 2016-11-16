@@ -28,12 +28,5 @@
             var max = result.Values.Max();
             return result.Where(x => x.Value == max);
         }
-
-        public static IEnumerable<KeyValuePair<TKey, int>> GetMax<TKey, TValue>(this IEnumerable<TValue> collection, Func<TValue, TKey> keyGenerator, Func<TValue, int> valueGenerator)
-        {
-            var result = collection.ToDictionary(keyGenerator, valueGenerator);
-            var max = result.Values.Max();
-            return result.Where(x => x.Value == max);
-        }
     }
 }

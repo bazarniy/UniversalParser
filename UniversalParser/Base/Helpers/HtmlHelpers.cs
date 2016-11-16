@@ -85,5 +85,15 @@
         {
             return node.Descendants().Where(x => x.NodeType == HtmlNodeType.Element);
         }
+
+        public static IEnumerable<HtmlNode> GetAllTags(string html)
+        {
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+
+            var body = htmlDoc.GetBody();
+
+            return body == null ? Enumerable.Empty<HtmlNode>() : body.GetAllTags();
+        }
     }
 }
