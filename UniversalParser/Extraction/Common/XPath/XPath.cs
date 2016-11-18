@@ -43,7 +43,7 @@
 
         public bool HasChild(XPath node)
         {
-            
+            return node.NodeCount == NodeCount + 1 && node.Nodes.Take(NodeCount).SequenceEqual(Nodes);
         }
 
         public override string ToString()
