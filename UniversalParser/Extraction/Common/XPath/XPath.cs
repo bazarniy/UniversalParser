@@ -1,6 +1,5 @@
-﻿namespace ConsoleApplication1.XPath
+﻿namespace Extraction.Common.XPath
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -9,19 +8,12 @@
     public sealed class XPath
     {
         internal readonly XNode[] Nodes;
-        public readonly string OriginalXpath;
-
-        internal XPath(string originalXpath, XNode[] nodes)
-        {
-            OriginalXpath = originalXpath;
-            Nodes = nodes;
-        }
+        private readonly string _xpathSceleton;
 
         internal XPath(HtmlNode node)
         {
             var result = new List<XNode>();
-            OriginalXpath = node.XPath;
-
+            
             var lnode = node;
             while (lnode != null && lnode.NodeType == HtmlNodeType.Element)
             {
@@ -30,6 +22,8 @@
             }
 
             Nodes = result.ToArray();
+
+            _xpathSceleton = GetXpath(false, false);
         }
 
         public IEnumerable<string> Classes
@@ -47,20 +41,25 @@
             return "/" + ret;
         }
 
+        public bool HasChild(XPath node)
+        {
+            
+        }
+
         public override string ToString()
         {
-            return GetXpath(false, false);
+            return _xpathSceleton;
         }
 
         public override bool Equals(object obj)
         {
             var x = obj as XPath;
-            return x != null && x.OriginalXpath == OriginalXpath && x.Nodes.SequenceEqual(Nodes);
+            return x != null && x._xpathSceleton == _xpathSceleton && x.Nodes.SequenceEqual(Nodes);
         }
 
         public override int GetHashCode()
         {
-            return this.OriginalXpath.GetHashCode(); // ^ b.GetHashCode();
+            return _xpathSceleton.GetHashCode(); // ^ b.GetHashCode();
         }
     }
 }

@@ -21,12 +21,5 @@
                     return false;
             return cnt.Values.All(c => c == 0);
         }
-
-        public static IEnumerable<KeyValuePair<T, int>> GetMax<T>(this IEnumerable<T> collection, Func<T, int> valueGenerator)
-        {
-            var result = collection.ToDictionary(x => x, valueGenerator);
-            var max = result.Values.Max();
-            return result.Where(x => x.Value == max);
-        }
     }
 }

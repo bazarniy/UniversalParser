@@ -81,6 +81,14 @@
             return html.DocumentNode.Descendants(BodyTag).FirstOrDefault();
         }
 
+        public static HtmlNode GetBody(string html)
+        {
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+
+            return htmlDoc.DocumentNode.Descendants(BodyTag).FirstOrDefault();
+        }
+
         public static IEnumerable<HtmlNode> GetAllTags(this HtmlNode node)
         {
             return node.Descendants().Where(x => x.NodeType == HtmlNodeType.Element);

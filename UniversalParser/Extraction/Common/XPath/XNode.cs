@@ -1,4 +1,4 @@
-﻿namespace ConsoleApplication1.XPath
+﻿namespace Extraction.Common.XPath
 {
     using System;
     using System.Collections.Generic;
