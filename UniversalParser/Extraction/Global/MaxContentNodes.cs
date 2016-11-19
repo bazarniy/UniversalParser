@@ -37,7 +37,9 @@
             Parallel.ForEach(infos, info =>
             {
                 foreach (var metricPair in EvaluateDocumentMetric(info))
+                {
                     _metricBag.AddOrUpdate(metricPair.Key, metricPair.Value, (key, value) => value.Merge(metricPair.Value));
+                }
             });
         }
 

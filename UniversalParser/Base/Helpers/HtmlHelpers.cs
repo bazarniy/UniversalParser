@@ -91,7 +91,12 @@
 
         public static IEnumerable<HtmlNode> GetAllTags(this HtmlNode node)
         {
-            return node.Descendants().Where(x => x.NodeType == HtmlNodeType.Element);
+            return node.Descendants().Where(IsElementNodeType);
+        }
+
+        public static bool IsElementNodeType(this HtmlNode node)
+        {
+            return node.NodeType == HtmlNodeType.Element;
         }
 
         public static IEnumerable<HtmlNode> GetAllTags(string html)
@@ -102,6 +107,26 @@
             var body = htmlDoc.GetBody();
 
             return body == null ? Enumerable.Empty<HtmlNode>() : body.GetAllTags();
+        }
+
+        public static IEnumerable<HtmlNode> GetMaxDepthNodes(HtmlNode rootNode, int depth)
+        {
+            var last = rootNode.GetAllTags().Where(x => x.HasChildNodes == false);
+            for (var i = 0; i < depth; i++)
+            {
+                last = last.Select(x => x.ParentNode).Where(IsElementNodeType).Distinct();
+            }
+            return last;
+        }
+
+        public static double CompareAttributeValues(IEnumerable<string> attr1, IEnumerable<string> attr2)
+        {
+            var a1 = attr1.ToArray();
+            var a2 = attr2.ToArray();
+
+            var union = a1.Union(a2).Distinct().Count();
+
+            return union != 0 ? a1.Intersect(a2).Count() / union : 0; //пересечение/объединение
         }
     }
 }

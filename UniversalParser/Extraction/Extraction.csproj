@@ -49,6 +49,8 @@
     <Compile Include="Common\XPath\XPathExtentions.cs" />
     <Compile Include="Global\ContentLengthMetric.cs" />
     <Compile Include="Global\MaxContentNodes.cs" />
+    <Compile Include="Local\GraphNode.cs" />
+    <Compile Include="Local\SimilarNodeSearch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

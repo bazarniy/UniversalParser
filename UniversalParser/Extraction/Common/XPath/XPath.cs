@@ -1,4 +1,6 @@
-﻿namespace Extraction.Common.XPath
+﻿using Base.Helpers;
+
+namespace Extraction.Common.XPath
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -15,7 +17,7 @@
             var result = new List<XNode>();
             
             var lnode = node;
-            while (lnode != null && lnode.NodeType == HtmlNodeType.Element)
+            while (lnode != null && lnode.IsElementNodeType())
             {
                 result.Insert(0, new XNode(lnode));
                 lnode = lnode.ParentNode;
