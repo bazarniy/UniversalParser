@@ -8,7 +8,7 @@ namespace Extraction.Local
 {
     
 
-    internal class GraphNode
+    public class GraphNode
     {
         private string[] _attributes;
 
@@ -19,73 +19,13 @@ namespace Extraction.Local
 
         public string Name => OrigNode.Name;
 
-        public int Depth { get; }
+        public double Weight { get; set; }
+        public readonly int Level; //с нуля
 
-        private double _weight;
-        private readonly int _level; //с нуля
-
-        public GraphNode(HtmlNode node)
-            : this(node, 0)
-        {
-        }
-
-        private GraphNode(HtmlNode node, int level)
+        public GraphNode(HtmlNode node, int level)
         {
             OrigNode = node;
-            _level = level;
-            foreach (var innerNode in node.ChildNodes.Where(HtmlHelpers.IsElementNodeType))
-            {
-                Children.Add(new GraphNode(innerNode, level + 1));
-            }
-            if (Children.Any())
-            {
-                Depth = Children.Max(x => x.Depth);
-            }
-            Depth++;
-            if (_level == 0)
-            {
-                Init();
-            }
-        }
-
-        private void Init()
-        {
-            const double Normalization = 2;
-
-            var levels = new Dictionary<int, int>();
-            CountNodesByLevel(this, levels);
-
-            var nodeWeightOnLevel = new List<double>();
-
-            double levelWeight = 0;
-            for (var i = 0; i < levels.Count - 1; i++)
-            {
-                levelWeight = Math.Pow(Normalization, -(i + 1));
-                nodeWeightOnLevel.Add(levelWeight / levels[i]);
-            }
-            nodeWeightOnLevel.Add(levelWeight / levels[levels.Keys.Max()]);
-
-            SetWeight(nodeWeightOnLevel.ToArray());
-        }
-
-        private static void CountNodesByLevel(GraphNode node, IDictionary<int, int> dict)
-        {
-            if (!dict.ContainsKey(node._level)) dict[node._level] = 0;
-
-            dict[node._level]++;
-            foreach (var nodeChild in node.Children)
-            {
-                CountNodesByLevel(nodeChild, dict);
-            }
-        }
-
-        internal void SetWeight(double[] nodeWeightByLevel)
-        {
-            _weight = nodeWeightByLevel[_level];
-            foreach (var child in Children)
-            {
-                child.SetWeight(nodeWeightByLevel);
-            }
+            Level = level;
         }
 
         public double CompareTrees(GraphNode node)
@@ -127,13 +67,67 @@ namespace Extraction.Local
         private double Comapre(GraphNode node)
         {
             return Name == node.Name
-                ? HtmlHelpers.CompareAttributeValues(Attribtes, node.Attribtes) * _weight
+                ? HtmlHelpers.CompareAttributeValues(Attribtes, node.Attribtes) * Weight
                 : 0;
         }
 
         public override string ToString()
         {
-            return $"{Name}[{string.Join(", ", Attribtes)}]d{Depth}c{Children.Count}w"+_weight.ToString("0.00");
+            return $"{Name}[{string.Join(", ", Attribtes)}]d{Level}c{Children.Count}w"+Weight.ToString("0.00");
+        }
+
+        private const double Normalization = 2;
+
+        public static GraphNode GenerateTree(HtmlNode htmlNode, int level = 0)
+        {
+            var node = new GraphNode(htmlNode, level);
+            foreach (var innerHtmlNode in htmlNode.ChildNodes.Where(HtmlHelpers.IsElementNodeType))
+            {
+                node.Children.Add(GenerateTree(innerHtmlNode, level));
+            }
+            if (level == 0)
+            {
+                SetTreeWeight(node);
+            }
+            return node;
+        }
+
+        private static void SetTreeWeight(GraphNode node)
+        {
+            var levels = new Dictionary<int, int>();
+            CountNodesByLevel(node, levels);
+
+            var nodeWeightOnLevel = new List<double>();
+
+            double levelWeight = 0;
+            for (var i = 0; i < levels.Count - 1; i++)
+            {
+                levelWeight = Math.Pow(Normalization, -(i + 1));
+                nodeWeightOnLevel.Add(levelWeight / levels[i]);
+            }
+            nodeWeightOnLevel.Add(levelWeight / levels[levels.Keys.Max()]);
+
+            SetWeight(node, nodeWeightOnLevel.ToArray());
+        }
+
+        private static void CountNodesByLevel(GraphNode node, IDictionary<int, int> dict)
+        {
+            if (!dict.ContainsKey(node.Level)) dict[node.Level] = 0;
+
+            dict[node.Level]++;
+            foreach (var nodeChild in node.Children)
+            {
+                CountNodesByLevel(nodeChild, dict);
+            }
+        }
+
+        private static void SetWeight(GraphNode node, IList<double> nodeWeightByLevel)
+        {
+            node.Weight = nodeWeightByLevel[node.Level];
+            foreach (var child in node.Children)
+            {
+                SetWeight(child, nodeWeightByLevel);
+            }
         }
     }
 }

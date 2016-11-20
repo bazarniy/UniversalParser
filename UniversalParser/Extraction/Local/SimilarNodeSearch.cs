@@ -24,7 +24,7 @@ namespace Extraction.Local
         {
             //TODO: погуглить на что можно заменить (надо keyValuePair с изменяемым ключем)
             var groups = new List<Pair>();
-            var last = HtmlHelpers.GetMaxDepthNodes(rootNode, level).Select(x => new GraphNode(x)).ToList();
+            var last = HtmlHelpers.GetMaxDepthNodes(rootNode, level).Select(GraphNode.GenerateTree).ToList();
 
             foreach (var node in last)
             {
