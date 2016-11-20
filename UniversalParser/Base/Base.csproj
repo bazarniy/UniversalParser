@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="DataInfo.cs" />
     <Compile Include="Helpers\ConcurrentQueueExtentions.cs" />
+    <Compile Include="Helpers\DictionaryExtentions.cs" />
     <Compile Include="Helpers\EnumerableExtentions.cs" />
     <Compile Include="Helpers\HtmlHelpers.cs" />
     <Compile Include="Helpers\ConcurrentBagExtentions.cs" />

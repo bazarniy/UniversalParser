@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Base.Helpers;
-using HtmlAgilityPack;
-
-namespace Extraction.Local
+﻿namespace Extraction.Local
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using Base.Helpers;
+    using HtmlAgilityPack;
+
     public class GraphNode
     {
-        private string[] _attributes;
-
-        public string[] Attribtes => _attributes ?? (_attributes = OrigNode.GetClasses().ToArray());
+        public readonly int Level;
 
         public List<GraphNode> Children = new List<GraphNode>();
         public HtmlNode OrigNode;
-
-        public string Name => OrigNode.Name;
-
-        public double Weight { get; set; }
-        public readonly int Level; //с нуля
 
         public GraphNode(HtmlNode node, int level)
         {
@@ -26,10 +18,17 @@ namespace Extraction.Local
             Level = level;
         }
 
+        private string[] _attributes;
+        public string[] Attribtes => _attributes ?? (_attributes = OrigNode.GetClasses().ToArray());
+
+        public string Name => OrigNode.Name;
+
+        public double Weight { get; set; }
+
         public double CompareTrees(GraphNode node)
         {
             var res = Comapre(node);
-            if (res.Equals(0)) return 0;
+            if (res.Equals(0)) return 0; //TODO: double equals?
 
             var foundNodes = new List<GraphNode>();
             foreach (var child1 in Children)
@@ -59,19 +58,19 @@ namespace Extraction.Local
                 maxNode = node;
             }
 
-            return maxNode != null && max > 0 ? maxNode : null;
+            return (maxNode != null) && (max > 0) ? maxNode : null;
         }
 
         private double Comapre(GraphNode node)
         {
             return Name == node.Name
-                ? HtmlHelpers.CompareAttributeValues(Attribtes, node.Attribtes) * Weight
+                ? HtmlHelpers.CompareAttributeValues(Attribtes, node.Attribtes)*Weight
                 : 0;
         }
 
         public override string ToString()
         {
-            return $"{Name}[{string.Join(", ", Attribtes)}]d{Level}c{Children.Count}w"+Weight.ToString("0.00");
+            return $"{Name}[{string.Join(", ", Attribtes)}]d{Level}c{Children.Count}w" + Weight.ToString("0.00");
         }
     }
 }

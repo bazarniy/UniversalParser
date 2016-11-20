@@ -6,49 +6,38 @@ using HtmlAgilityPack;
 
 namespace Extraction.Local
 {
-    public static class SimilarNodeSearcher
+    public class ReversePageNodes
     {
-        private class Pair
+        private class SimilarityMetric
         {
             public double Key = 0;
             public readonly List<GraphNode> Value = new List<GraphNode>();
         }
 
-        /// <summary>
-        /// Searches similar nodes in HtmlNode
-        /// </summary>
-        /// <param name="rootNode">documentRoot</param>
-        /// <param name="level">depth of comaping nodes (глубина с конца)</param>
-        /// <param name="minSimilarity">min similarity coefficient value</param>
-        /// <returns></returns>
-        public static Dictionary<List<HtmlNode>, double> SearchSimilarNodes(HtmlNode rootNode, int level, double minSimilarity = 0.5)
+        public Dictionary<List<HtmlNode>, double> SearchSimilarNodes(HtmlNode rootNode, int level, double minSimilarity = 0.5)
         {
-            //TODO: погуглить на что можно заменить (надо keyValuePair с изменяемым ключем)
-            var groups = new List<Pair>();
-            var last = HtmlHelpers.GetMaxDepthNodes(rootNode, level).Select(GenerateTree).ToList();
+            var groups = new List<SimilarityMetric>();
+            var last = HtmlHelpers.GetMaxDepthNodes(rootNode, level).Select(GenerateTree);
 
             foreach (var node in last)
             {
                 var found = false;
 
-                //compare with first node from group
                 foreach (var group in groups)
                 {
                     var c = node.CompareTrees(group.Value[0]);
-                    if (c >= minSimilarity)
-                    {
-                        group.Value.Add(node);
-                        group.Key += c;
-                        found = true;
-                    }
+                    if (c < minSimilarity) continue;
+
+                    group.Value.Add(node);
+                    group.Key += c;
+                    found = true;
                 }
 
-                if (!found)
-                {
-                    var newPair = new Pair();
-                    newPair.Value.Add(node);
-                    groups.Add(newPair);
-                }
+                if (found) continue;
+
+                var newPair = new SimilarityMetric();
+                newPair.Value.Add(node);
+                groups.Add(newPair);
             }
 
             return groups
