@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using Base.Helpers;
+    using Common;
     using HtmlAgilityPack;
 
     public class SimilarNodeTrees

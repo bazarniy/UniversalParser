@@ -1,4 +1,4 @@
-﻿namespace Extraction.Local
+﻿namespace Extraction.Common
 {
     using System;
     using System.Collections.Generic;

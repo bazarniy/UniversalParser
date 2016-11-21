@@ -128,5 +128,15 @@
 
             return union != 0 ? a1.Intersect(a2).Count() / union : 0; //пересечение/объединение
         }
+
+        public static int GetColspan(this HtmlNode node)
+        {
+            return node.GetAttributeValue("colspan", 1);
+        }
+
+        public static int GetRowspan(this HtmlNode node)
+        {
+            return node.GetAttributeValue("rowspan", 1);
+        }
     }
 }

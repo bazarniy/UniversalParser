@@ -44,12 +44,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\NormalizedTable.cs" />
     <Compile Include="Common\XPath\XNode.cs" />
     <Compile Include="Common\XPath\XPath.cs" />
     <Compile Include="Common\XPath\XPathExtentions.cs" />
     <Compile Include="Global\ContentLengthMetric.cs" />
     <Compile Include="Global\MaxContentNodes.cs" />
-    <Compile Include="Local\GraphNode.cs" />
+    <Compile Include="Common\GraphNode.cs" />
     <Compile Include="Local\SimilarNodeTrees.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

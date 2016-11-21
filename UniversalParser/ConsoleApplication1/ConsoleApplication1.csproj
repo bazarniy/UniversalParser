@@ -60,6 +60,14 @@
       <Project>{874c21a4-9cd7-4b2b-9aed-02f4a92558c9}</Project>
       <Name>Base</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Extraction\Extraction.csproj">
+      <Project>{c19b5778-95db-45b2-b606-152ee29da460}</Project>
+      <Name>Extraction</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Networking\Networking.csproj">
+      <Project>{f8918d2f-5c2b-402b-b1c5-c728053cb257}</Project>
+      <Name>Networking</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
