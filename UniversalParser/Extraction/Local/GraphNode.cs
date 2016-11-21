@@ -1,11 +1,12 @@
 ﻿namespace Extraction.Local
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Base.Helpers;
     using HtmlAgilityPack;
 
-    public class GraphNode
+    internal class GraphNode
     {
         public readonly int Level;
 
@@ -28,7 +29,7 @@
         public double CompareTrees(GraphNode node)
         {
             var res = Comapre(node);
-            if (res.Equals(0)) return 0; //TODO: double equals?
+            if (Math.Abs(res) < double.Epsilon) return 0;
 
             var foundNodes = new List<GraphNode>();
             foreach (var child1 in Children)

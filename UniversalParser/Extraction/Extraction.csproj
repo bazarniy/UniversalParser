@@ -50,7 +50,7 @@
     <Compile Include="Global\ContentLengthMetric.cs" />
     <Compile Include="Global\MaxContentNodes.cs" />
     <Compile Include="Local\GraphNode.cs" />
-    <Compile Include="Local\ReversePageNodes.cs" />
+    <Compile Include="Local\SimilarNodeTrees.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

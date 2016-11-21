@@ -1,42 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Base.Helpers;
-using HtmlAgilityPack;
-
-namespace Extraction.Local
+﻿namespace Extraction.Local
 {
-    public class ReversePageNodes
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Base.Helpers;
+    using HtmlAgilityPack;
+
+    public class SimilarNodeTrees
     {
-        private class SimilarityMetric
-        {
-            public double Key = 0;
-            public readonly List<GraphNode> Value = new List<GraphNode>();
-        }
+        private const double Normalization = 2;
 
-        public Dictionary<List<HtmlNode>, double> SearchSimilarNodes(HtmlNode rootNode, int level, double minSimilarity = 0.5)
+        public static Dictionary<List<HtmlNode>, double> GetSimilarTrees(HtmlNode rootNode, int level, double minSimilarity = 0.5)
         {
-            var groups = new List<SimilarityMetric>();
-            var last = HtmlHelpers.GetMaxDepthNodes(rootNode, level).Select(GenerateTree);
+            var groups = new List<SimilarityCollection>();
+            var lastNodeTrees = HtmlHelpers.GetMaxDepthNodes(rootNode, level)
+                .Select(GenerateTree);
 
-            foreach (var node in last)
+            foreach (var nodeTree in lastNodeTrees)
             {
                 var found = false;
 
                 foreach (var group in groups)
                 {
-                    var c = node.CompareTrees(group.Value[0]);
+                    var c = nodeTree.CompareTrees(group.Value[0]);
+
                     if (c < minSimilarity) continue;
 
-                    group.Value.Add(node);
-                    group.Key += c;
+                    group.Value.Add(nodeTree);
+                    group.SumSimilarity += c;
                     found = true;
                 }
 
                 if (found) continue;
 
-                var newPair = new SimilarityMetric();
-                newPair.Value.Add(node);
+                var newPair = new SimilarityCollection();
+                newPair.Value.Add(nodeTree);
                 groups.Add(newPair);
             }
 
@@ -44,23 +42,17 @@ namespace Extraction.Local
                 .Where(p => p.Value.Count > 1)
                 .ToDictionary(
                     pair => pair.Value.Select(x => x.OrigNode).ToList(),
-                    pair => pair.Key / pair.Value.Count
+                    pair => pair.Average
                 );
         }
 
-        private const double Normalization = 2;
-
-        public static GraphNode GenerateTree(HtmlNode htmlNode, int level = 0)
+        internal static GraphNode GenerateTree(HtmlNode htmlNode, int level = 0)
         {
             var node = new GraphNode(htmlNode, level);
             foreach (var innerHtmlNode in htmlNode.ChildNodes.Where(HtmlHelpers.IsElementNodeType))
-            {
                 node.Children.Add(GenerateTree(innerHtmlNode, level));
-            }
-            if (level == 0)
-            {
-                SetTreeWeight(node);
-            }
+
+            if (level == 0) SetTreeWeight(node);
             return node;
         }
 
@@ -75,9 +67,9 @@ namespace Extraction.Local
             for (var i = 0; i < levels.Count - 1; i++)
             {
                 levelWeight = Math.Pow(Normalization, -(i + 1));
-                nodeWeightOnLevel.Add(levelWeight / levels[i]);
+                nodeWeightOnLevel.Add(levelWeight/levels[i]);
             }
-            nodeWeightOnLevel.Add(levelWeight / levels[levels.Keys.Max()]);
+            nodeWeightOnLevel.Add(levelWeight/levels[levels.Keys.Max()]);
 
             SetWeight(node, nodeWeightOnLevel.ToArray());
         }
@@ -88,18 +80,22 @@ namespace Extraction.Local
 
             dict[node.Level]++;
             foreach (var nodeChild in node.Children)
-            {
                 CountNodesByLevel(nodeChild, dict);
-            }
         }
 
         private static void SetWeight(GraphNode node, IList<double> nodeWeightByLevel)
         {
             node.Weight = nodeWeightByLevel[node.Level];
             foreach (var child in node.Children)
-            {
                 SetWeight(child, nodeWeightByLevel);
-            }
+        }
+
+        private class SimilarityCollection
+        {
+            public readonly List<GraphNode> Value = new List<GraphNode>();
+            public double SumSimilarity;
+
+            public double Average => Value.Count != 0 ? SumSimilarity/Value.Count : 0;
         }
     }
 }
