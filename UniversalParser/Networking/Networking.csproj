@@ -40,10 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataWriter\DataWriter.cs" />
-    <Compile Include="DataWriter\DataWriterIndex.cs" />
     <Compile Include="DomainLoader.cs" />
-    <Compile Include="IDataWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -48,6 +48,7 @@
     <Compile Include="Common\XPath\XNode.cs" />
     <Compile Include="Common\XPath\XPath.cs" />
     <Compile Include="Common\XPath\XPathExtentions.cs" />
+    <Compile Include="Extractor.cs" />
     <Compile Include="Global\ContentLengthMetric.cs" />
     <Compile Include="Global\MaxContentNodes.cs" />
     <Compile Include="Common\GraphNode.cs" />

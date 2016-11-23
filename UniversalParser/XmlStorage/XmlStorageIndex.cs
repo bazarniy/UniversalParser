@@ -1,4 +1,4 @@
-﻿namespace Networking.DataWriter
+﻿namespace XmlStorage
 {
     using System;
     using System.Collections.Generic;
@@ -6,14 +6,14 @@
 
     [Serializable]
     [XmlRoot("Index")]
-    public sealed class DataWriterIndex
+    internal sealed class XmlStorageIndex
     {
         [XmlElement("Item")]
-        public List<DataWriterItem> Items { get; set; }
+        public List<XmlStorageItem> Items { get; set; }
     }
 
     [Serializable]
-    public sealed class DataWriterItem
+    internal sealed class XmlStorageItem
     {
         [XmlAttribute("filename")]
         public string FileName { get; set; }

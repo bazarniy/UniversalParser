@@ -1,7 +1,5 @@
-﻿namespace Networking
+﻿namespace Base
 {
-    using Base;
-
     public interface IDataWriter
     {
         void Write(DataInfo info);

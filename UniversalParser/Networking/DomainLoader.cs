@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
+    using Base;
     using Base.Helpers;
 
     public class DomainLoader
