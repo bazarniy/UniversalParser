@@ -7,7 +7,7 @@
     using Base;
     using Base.Serializers;
 
-    public class XmlSiteStorage : ISiteStorage
+    public class XmlSiteStorage_old : ISiteStorage
     {
         private const string IndexName = "index.xml";
         private readonly string _basePath;
@@ -16,7 +16,7 @@
 
         private readonly object _latch = new object(); //TODO: to reader writer lock
 
-        public XmlSiteStorage(string path)
+        public XmlSiteStorage_old(string path)
         {
             _basePath = Path.GetDirectoryName(path) ?? "";
             if (!string.IsNullOrWhiteSpace(_basePath)) Directory.CreateDirectory(_basePath);
