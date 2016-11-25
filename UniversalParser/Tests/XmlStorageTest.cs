@@ -16,21 +16,37 @@ namespace Tests
     public class XmlStorageTest
     {
         /*
-         Write->файл с рандомным именем создан
-         Write->файл по базовому адресу создан
-             */
+                             Write->файл с рандомным именем создан
+                             Write->файл по базовому адресу создан
+                                 */
+
+        public static IEnumerable<TestCaseData> StorageCtorArgs
+        {
+            get
+            {
+                yield return new TestCaseData("testDir", Substitute.For<IStorageDriver>(), null);
+                yield return new TestCaseData(null, null, typeof(ArgumentNullException));
+                yield return new TestCaseData(null, Substitute.For<IStorageDriver>(), typeof(ArgumentNullException));
+                yield return new TestCaseData("testDir", null, typeof(ArgumentNullException));
+                yield return new TestCaseData("invalid:path", Substitute.For<IStorageDriver>(), typeof(ArgumentException));
+            }
+        }
 
         [Test]
-        public void TestStorageCreate()
+        [TestCaseSource(nameof(StorageCtorArgs))]
+        public void TestStorageCtorArguments(string path, IStorageDriver driver, Type exceptionType)
+        {
+            if (exceptionType == null) Assert.DoesNotThrow(() => new XmlStorage(path, driver));
+            else Assert.Catch(exceptionType, () => new XmlStorage(path, driver));
+        }
+
+        [Test]
+        public void TestStorageCtorInitialize()
         {
             var path = "testDir";
             var driver = Substitute.For<IStorageDriver>();
-
-            Assert.DoesNotThrow(() => new XmlStorage(path, driver));
-            driver.Received(1).DirectoryCreate(Arg.Is<string>(x => x == path));
-            Assert.Throws<ArgumentNullException>(() => new XmlStorage(null, driver));
-            Assert.Throws<ArgumentNullException>(() => new XmlStorage(path, null));
-            Assert.Throws<ArgumentException>(() => new XmlStorage("invalid:path", driver));
+            var storage = new XmlStorage(path, driver);
+            driver.Received(1).DirectoryCreate(Arg.Is(path));
         }
 
         [Test]
@@ -45,8 +61,8 @@ namespace Tests
 
             driver.GetRandomFileName().Returns("randomFileName");
             Assert.DoesNotThrow(() => stor.Write(info));
-            
-            driver.Received(1).FileWrite(Arg.Any<DataInfo>(), Arg.Is<string>(x=>!string.IsNullOrWhiteSpace(x)));
+
+            driver.Received(1).FileWrite(Arg.Any<DataInfo>(), Arg.Is<string>(x => !string.IsNullOrWhiteSpace(x)));
         }
     }
 }
