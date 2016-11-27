@@ -78,5 +78,20 @@
         {
             Assert.DoesNotThrow(() => PathValidator.ValidateFolderPath(path));
         }
+
+        [Test]
+        [TestCase("xxx.ext", "xxx.ext")]
+        [TestCase("xxx", "xxx")]
+        [TestCase(@"xxx\sss", "sss")]
+        [TestCase(@"C:\", "")]
+        [TestCase(@"C:\xxx.ext", "xxx.ext")]
+        [TestCase(@"C:\folder\xxx.ext", "xxx.ext")]
+        [TestCase(@"C:\folder\xxx", "xxx")]
+        [TestCase(@"C:\folder1\folder2\xxx.ext", "xxx.ext")]
+        [TestCase(@"C:\folder\", "")]
+        public void TestValidateGetFileName(string path, string result)
+        {
+            Assert.AreEqual(PathValidator.GetLastPathSegment(path), result);
+        }
     }
 }

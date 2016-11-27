@@ -11,11 +11,9 @@ namespace XmlStorage
 
     public interface IStorageDriver
     {
-        void DirectoryCreate(string path);
-        bool DirectoryExist(string path);
-
-        void FileWrite(DataInfo info, string path);
-
         string GetRandomFileName();
+        bool FileExist(string path);
+        IEnumerable<string> FileEnum();
+        void FileRemove(string path);
     }
 }

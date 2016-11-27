@@ -70,7 +70,7 @@
                 .Any(fileName.Contains);
         }
 
-        private static string GetLastPathSegment(string path)
+        public static string GetLastPathSegment(string path)
         {
             return path.EndsWith(Path.DirectorySeparatorChar.ToString())
                 ? string.Empty

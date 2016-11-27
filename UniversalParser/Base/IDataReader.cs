@@ -4,9 +4,6 @@
 
     public interface IDataReader
     {
-        IEnumerable<string> GetFileNames();
-        DataInfo GetFile(string file);
-
         IEnumerable<DataInfo> GetInfos();
 
         int Count();
