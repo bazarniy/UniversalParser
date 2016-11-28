@@ -7,7 +7,7 @@
     using Base;
     using Base.Serializers;
 
-    public class XmlSiteStorage_old : ISiteStorage
+    /*public class XmlSiteStorage_old : ISiteStorage
     {
         private const string IndexName = "index.xml";
         private readonly string _basePath;
@@ -85,5 +85,5 @@
         {
             return Path.Combine(_basePath, filename);
         }
-    }
+    }*/
 }

@@ -53,6 +53,7 @@
     <Compile Include="PathValidatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageDriverTest.cs" />
+    <Compile Include="XmlStorageIndexTest.cs" />
     <Compile Include="XmlStorageTest.cs" />
   </ItemGroup>
   <ItemGroup>

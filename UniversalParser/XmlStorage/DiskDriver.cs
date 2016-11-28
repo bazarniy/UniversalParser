@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace XmlStorage
+﻿namespace XmlStorage
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
-    using Base;
     using Base.Utilities;
 
     public class DiskDriver : IStorageDriver
@@ -19,40 +14,39 @@ namespace XmlStorage
             if (path == null) throw new ArgumentNullException(nameof(path));
             _basePath = path;
 
-            if (path != string.Empty)
-            {
-                PathValidator.ValidateFolderPath(path);
-                Directory.CreateDirectory(_basePath);
-            }
+            if (path == string.Empty) return;
+
+            PathValidator.ValidateFolderPath(path);
+            Directory.CreateDirectory(_basePath);
         }
 
-        public Stream FileWrite(string path)
+        public Stream Write(string name)
         {
-            return File.Create(GetValidatedPath(path));
+            return File.Create(GetValidatedPath(name));
         }
 
-        public string GetRandomFileName()
+        public string GetRandomName()
         {
             return Path.GetRandomFileName();
         }
 
-        public bool FileExist(string name)
+        public bool Exists(string name)
         {
             return File.Exists(GetValidatedPath(name));
         }
 
-        public Stream FileRead(string name)
+        public Stream Read(string name)
         {
             var path = GetValidatedName(name);
             return !File.Exists(path) ? Stream.Null : File.OpenRead(path);
         }
 
-        public IEnumerable<string> FileEnum()
+        public IEnumerable<string> Enum()
         {
             return Directory.EnumerateFiles(_basePath);
         }
 
-        public void FileRemove(string name)
+        public void Remove(string name)
         {
             File.Delete(GetValidatedPath(name));
         }

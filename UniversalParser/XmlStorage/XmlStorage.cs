@@ -11,20 +11,16 @@
     {
         public const string IndexName = "index.xml";
         private readonly IStorageDriver _driver;
-        private readonly string _basePath;
         private readonly string _indexPath;
 
         private XmlStorageIndex _index;
 
-        public XmlStorage(string path, IStorageDriver storageDriver)
+        public XmlStorage(IStorageDriver storageDriver)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path));
             if (storageDriver == null) throw new ArgumentNullException(nameof(storageDriver));
-            PathValidator.ValidateFolderPath(path);
 
-            _basePath = path;
             _driver = storageDriver;
-            _indexPath = Path.Combine(_basePath, IndexName);
+            _indexPath = IndexName;
 
 
             Initialize();
@@ -34,7 +30,7 @@
         {
             //_driver.DirectoryCreate(_basePath);
 
-            if (_driver.FileExist(_indexPath))
+            if (_driver.Exists(_indexPath))
             {
                 try
                 {
@@ -45,7 +41,7 @@
                     //TODO: log exception
                 }
             }
-            _index = _index ?? new XmlStorageIndex();
+            _index = _index ?? new XmlStorageIndex(_driver);
             ClearWithIndex();
         }
 
@@ -59,7 +55,7 @@
 
             foreach (var file in filesToRemove)
             {
-                _driver.FileRemove(file);
+                _driver.Remove(file);
             }
         }
 

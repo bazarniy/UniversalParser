@@ -19,7 +19,7 @@ namespace Tests
     {
         private string _path;
         private IStorageDriver _driver;
-        private XmlStorage _storage => new XmlStorage(_path, _driver);
+        private XmlStorage _storage => new XmlStorage(_driver);
         private DataInfo _info;
         private string _indexPath;
         private XmlStorageIndex _fakeIndex;
@@ -30,10 +30,10 @@ namespace Tests
         public void TestSetup()
         {
             _path = "testDir";
-            _indexPath = Path.Combine(_path, XmlStorage.IndexName);
+            _indexPath = XmlStorage.IndexName;
             _driver = Substitute.For<IStorageDriver>();
             _info = new DataInfo("test data");
-            _fakeIndex = new XmlStorageIndex();
+            _fakeIndex = new XmlStorageIndex(_driver);
             _fakeIndex.Items.AddRange(new[] {new XmlStorageItem {FileName = "file1.bin", Url = "url1"}, new XmlStorageItem {FileName = "file2.bin", Url = "url2"} });
             _driverFiles = new[] {_indexPath, "file1.bin", "file2.bin", "file3.bin"};
         }
@@ -49,25 +49,22 @@ namespace Tests
         {
             get
             {
-                yield return new TestCaseData("testDir", Substitute.For<IStorageDriver>(), null);
-                yield return new TestCaseData(null, null, typeof(ArgumentNullException));
-                yield return new TestCaseData(null, Substitute.For<IStorageDriver>(), typeof(ArgumentNullException));
-                yield return new TestCaseData("testDir", null, typeof(ArgumentNullException));
-                yield return new TestCaseData("invalid:path", Substitute.For<IStorageDriver>(), typeof(ArgumentException));
+                yield return new TestCaseData(Substitute.For<IStorageDriver>(), null);
+                yield return new TestCaseData(null, typeof(ArgumentNullException));
             }
         }
 
         [Test]
         [TestCaseSource(nameof(StorageCtorArgs))]
-        public void StorageCtorArguments(string path, IStorageDriver driver, Type exceptionType)
+        public void StorageCtorArguments(IStorageDriver driver, Type exceptionType)
         {
             if (exceptionType == null)
             {
-                Assert.DoesNotThrow(() => new XmlStorage(path, driver));
+                Assert.DoesNotThrow(() => new XmlStorage(driver));
             }
             else
             {
-                Assert.Catch(exceptionType, () => new XmlStorage(path, driver));
+                Assert.Catch(exceptionType, () => new XmlStorage(driver));
             }
         }
 
@@ -75,21 +72,20 @@ namespace Tests
         public void StorageCtorInitialize_Calls()
         {
             var x = _storage;
-            //_driver.Received(1).DirectoryCreate(Arg.Is(_path));
-            _driver.Received(1).FileExist(Arg.Is(_indexPath));
+            _driver.Received(1).Exists(Arg.Is(_indexPath));
         }
 
         [Test]
         public void StorageCtorInitialize_IndexNotExist()
         {
-            _driver.FileExist(Arg.Is(_indexPath)).Returns(false);
+            _driver.Exists(Arg.Is(_indexPath)).Returns(false);
             Assert.AreEqual(_storage.Count(), 0);
         }
 
         [Test]
         public void StorageCtorInitialize_IndexExist()
         {
-            _driver.FileExist(Arg.Is(_indexPath)).Returns(true);
+            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
             //_driver.FileRead<XmlStorageIndex>(Arg.Is(_indexPath)).Returns(_fakeIndex);
             Assert.AreNotEqual(_storage.Count(), 0);
         }
@@ -97,7 +93,7 @@ namespace Tests
         [Test]
         public void StorageCtorInitialize_IndexExistCorrupt()
         {
-            _driver.FileExist(Arg.Is(_indexPath)).Returns(true);
+            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
             //_driver.FileRead<XmlStorageIndex>(Arg.Is(_indexPath)).Throws(new SerializationException());
             XmlStorage stor;
             Assert.DoesNotThrow(() => stor = _storage);
@@ -107,13 +103,13 @@ namespace Tests
         [Test]
         public void StorageCtorInitialize_IndexClearFiles()
         {
-            _driver.FileExist(Arg.Is(_indexPath)).Returns(true);
-            //_driver.FileRead<XmlStorageIndex>(Arg.Is(_indexPath)).Returns(_fakeIndex);
-            //_driver.FileEnum(Arg.Is(_path)).Returns(_driverFiles);
+            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
+            //_driver.Read<XmlStorageIndex>(Arg.Is(_indexPath)).Returns(_fakeIndex);
+            //_driver.Enum(Arg.Is(_path)).Returns(_driverFiles);
 
             Assert.AreNotEqual(_storage.Count(), 0);
-            _driver.Received().FileRemove(Arg.Is(_driverFiles.Last()));
-            _driver.DidNotReceive().FileRemove(Arg.Is<string>(x => _driverFiles.Take(3).Contains(x)));
+            _driver.Received().Remove(Arg.Is(_driverFiles.Last()));
+            _driver.DidNotReceive().Remove(Arg.Is<string>(x => _driverFiles.Take(3).Contains(x)));
         }
 
         [Test]
@@ -123,7 +119,7 @@ namespace Tests
 
             var testFileName = "randomFileName";
 
-            _driver.GetRandomFileName().Returns(testFileName);
+            _driver.GetRandomName().Returns(testFileName);
             Assert.DoesNotThrow(() => _storage.Write(_info));
 
             //driver.Received(1).FileWrite(Arg.Any<DataInfo>(), Arg.Is<string>(x => x.EndsWith(testFileName) && x.StartsWith(_path)));
@@ -139,7 +135,7 @@ namespace Tests
         public void ReadFile()
         {
             var testFileName = "randomFileName";
-            _driver.FileExist(Arg.Is(testFileName)).Returns(true);
+            _driver.Exists(Arg.Is(testFileName)).Returns(true);
 
             Assert.DoesNotThrow(() => _storage.GetFile(testFileName));
             //_driver.Received(1).FileRead<DataInfo>(Arg.Is<string>(x => x.EndsWith(testFileName) && x.StartsWith(_path)));
@@ -149,7 +145,7 @@ namespace Tests
         public void ReadCorruptedFile()
         {
             var testFileName = "randomFileName";
-            _driver.FileExist(Arg.Is(testFileName)).Returns(true);
+            _driver.Exists(Arg.Is(testFileName)).Returns(true);
             //_driver.FileRead<DataInfo>(Arg.Any<string>()).Throws(new SerializationException());
 
             Assert.IsNull(_storage.GetFile(testFileName));

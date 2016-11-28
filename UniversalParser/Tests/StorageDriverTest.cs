@@ -22,8 +22,6 @@ namespace Tests
             if (Directory.Exists(_storagePath)) Directory.Delete(_storagePath, true);
         }
 
-        /*сделать наследника xmlStorageDriver*/
-
         [Test]
         [TestCase("testDir", null)]
         [TestCase("", null)]
@@ -66,7 +64,7 @@ namespace Tests
         [Test]
         public void GetRandomFileName()
         {
-            var x = _driver.GetRandomFileName();
+            var x = _driver.GetRandomName();
             Assert.IsNotEmpty(x);
         }
 
@@ -80,11 +78,11 @@ namespace Tests
         {
             if (exceptionType != null)
             {
-                Assert.Catch(exceptionType, () => _driver.FileExist(path));
+                Assert.Catch(exceptionType, () => _driver.Exists(path));
             }
             else
             {
-                Assert.DoesNotThrow(() => _driver.FileExist(path));
+                Assert.DoesNotThrow(() => _driver.Exists(path));
             }
         }
 
@@ -93,7 +91,7 @@ namespace Tests
         [TestCase("C:\\testfile.xxx")]
         public void FileNotExist(string path)
         {
-            Assert.IsFalse(_driver.FileExist(path));
+            Assert.IsFalse(_driver.Exists(path));
         }
 
         [Test]
@@ -105,16 +103,16 @@ namespace Tests
             const string file = "testfile.xxx";
 
             File.WriteAllText(Path.Combine(_storagePath, file), "");
-            Assert.IsTrue(d.FileExist(path));
+            Assert.IsTrue(d.Exists(path));
         }
 
         [Test]
         public void FileEnum()
         {
             var d = _driver;
-            Assert.IsEmpty(d.FileEnum());
+            Assert.IsEmpty(d.Enum());
             File.WriteAllText(Path.Combine(_storagePath, "test"), "");
-            Assert.IsNotEmpty(d.FileEnum());
+            Assert.IsNotEmpty(d.Enum());
         }
 
         [Test]
@@ -127,11 +125,11 @@ namespace Tests
         {
             if (exceptionType != null)
             {
-                Assert.Catch(exceptionType, () => _driver.FileRemove(path));
+                Assert.Catch(exceptionType, () => _driver.Remove(path));
             }
             else
             {
-                Assert.DoesNotThrow(() => _driver.FileRemove(path));
+                Assert.DoesNotThrow(() => _driver.Remove(path));
             }
         }
 
@@ -150,9 +148,9 @@ namespace Tests
             var d = _driver;
             const string file = "testfile.xxx";
 
-            Assert.DoesNotThrow(() => d.FileRemove(path));
+            Assert.DoesNotThrow(() => d.Remove(path));
             File.WriteAllText(Path.Combine(_storagePath, file), "");
-            Assert.DoesNotThrow(()=>d.FileRemove(path));
+            Assert.DoesNotThrow(()=>d.Remove(path));
         }
 
         [Test]
@@ -165,11 +163,11 @@ namespace Tests
         {
             if (exceptionType != null)
             {
-                Assert.Catch(exceptionType, () => _driver.FileWrite(path).Close());
+                Assert.Catch(exceptionType, () => _driver.Write(path).Close());
             }
             else
             {
-                Assert.DoesNotThrow(() => _driver.FileWrite(path).Close());
+                Assert.DoesNotThrow(() => _driver.Write(path).Close());
             }
         }
 
@@ -179,10 +177,10 @@ namespace Tests
             var d = _driver;
             const string file = "testfile.xxx";
 
-            Assert.DoesNotThrow(() => d.FileWrite(file).Close());
+            Assert.DoesNotThrow(() => d.Write(file).Close());
             Assert.IsTrue(File.Exists(Path.Combine(_storagePath, file)));
             File.WriteAllText(Path.Combine(_storagePath, file), "");
-            Assert.DoesNotThrow(() => d.FileWrite(file).Close());
+            Assert.DoesNotThrow(() => d.Write(file).Close());
         }
 
         [Test]
@@ -205,11 +203,11 @@ namespace Tests
         {
             if (exceptionType != null)
             {
-                Assert.Catch(exceptionType, () => _driver.FileRead(path).Close());
+                Assert.Catch(exceptionType, () => _driver.Read(path).Close());
             }
             else
             {
-                Assert.DoesNotThrow(() => _driver.FileRead(path).Close());
+                Assert.DoesNotThrow(() => _driver.Read(path).Close());
             }
         }
 
@@ -219,9 +217,9 @@ namespace Tests
             var d = _driver;
             const string file = "testfile.xxx";
 
-            Assert.IsTrue(d.FileRead(file).Length==0);
+            Assert.IsTrue(d.Read(file).Length==0);
             File.WriteAllText(Path.Combine(_storagePath, file), "");
-            Assert.DoesNotThrow(() => d.FileRead(file).Close());
+            Assert.DoesNotThrow(() => d.Read(file).Close());
         }
     }
 }

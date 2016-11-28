@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace XmlStorage
+﻿namespace XmlStorage
 {
+    using System.Collections.Generic;
     using System.IO;
-    using Base;
 
     public interface IStorageDriver
     {
-        string GetRandomFileName();
-        bool FileExist(string path);
-        IEnumerable<string> FileEnum();
-        void FileRemove(string path);
+        Stream Write(string name);
+        string GetRandomName();
+        bool Exists(string name);
+        Stream Read(string name);
+        IEnumerable<string> Enum();
+        void Remove(string name);
     }
 }

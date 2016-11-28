@@ -8,10 +8,37 @@
     [XmlRoot("Index")]
     internal sealed class XmlStorageIndex
     {
-        private List<XmlStorageItem> _items;
+        public const string IndexName = "index.xml";
+        private IStorageDriver _driver;
 
         [XmlElement("Item")]
-        public List<XmlStorageItem> Items => _items ?? (_items = new List<XmlStorageItem>());
+        public List<XmlStorageItem> Items { get; private set; }
+
+        public XmlStorageIndex(IStorageDriver driver)
+        {
+            if (driver == null) throw new ArgumentNullException(nameof(driver));
+            _driver = driver;
+        }
+
+        private XmlStorageIndex()
+        {
+        }
+
+        public static XmlStorageIndex GetIndex(IStorageDriver driver)
+        {
+            if (driver == null) throw new ArgumentNullException(nameof(driver));
+
+            var result = new XmlStorageIndex(driver);
+            if (driver.Exists(IndexName))
+            {
+                //Load
+            }
+            else
+            {
+                result.Items = new List<XmlStorageItem>();
+            }
+            return result;
+        }
     }
 
     [Serializable]
