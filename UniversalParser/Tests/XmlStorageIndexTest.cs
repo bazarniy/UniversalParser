@@ -42,6 +42,8 @@ namespace Tests
             driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
         }
 
+        // TODO: thread safe Save method
+
         [Test]
         public void CtorArguments()
         {
@@ -64,7 +66,7 @@ namespace Tests
             var x = XmlStorageIndex.GetIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
-            Assert.AreEqual(x.Items.Count, 0);
+            Assert.AreEqual(x.Count(), 0);
         }
 
         [Test]
@@ -78,7 +80,7 @@ namespace Tests
             var x = XmlStorageIndex.GetIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
-            Assert.AreEqual(x.Items.Count, 0);
+            Assert.AreEqual(x.Count(), 0);
             Assert.DoesNotThrow(x.Save);
         }
 
@@ -88,14 +90,14 @@ namespace Tests
             SetIndexExist(_driver);
 
             var ind = new XmlStorageIndex(_driver);
-            ind.Items.Add(new XmlStorageItem {FileName = "ololo", Url = "azaza"});
-            ind.Items.Add(new XmlStorageItem());
+            ind.Add(new StorageItem {FileName = "ololo", Url = "azaza"});
+            ind.Add(new StorageItem());
             ind.Save();
 
             var x = XmlStorageIndex.GetIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
-            Assert.AreEqual(x.Items.Count, 2);
+            Assert.AreEqual(x.Count(), 2);
             Assert.DoesNotThrow(x.Save);
         }
 
@@ -108,6 +110,17 @@ namespace Tests
             Assert.DoesNotThrow(ind.Save);
             Assert.IsTrue(file.Exists);
             Assert.Greater(file.Length, 0);
+        }
+
+        [Test]
+        public void AddCount()
+        {
+            var ind = new XmlStorageIndex(_driver);
+            Assert.AreEqual(ind.Count(), 0);
+
+            Assert.Catch<ArgumentNullException>(() => ind.Add(null));
+            ind.Add(new StorageItem());
+            Assert.AreEqual(ind.Count(), 1);
         }
     }
 }

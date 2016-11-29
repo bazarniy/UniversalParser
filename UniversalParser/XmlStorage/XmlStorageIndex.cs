@@ -13,13 +13,13 @@
         private IStorageDriver _driver;
 
         [XmlElement("Item")]
-        public List<XmlStorageItem> Items { get; set; }
+        private List<StorageItem> Items { get; set; }
 
         public XmlStorageIndex(IStorageDriver driver)
         {
             if (driver == null) throw new ArgumentNullException(nameof(driver));
             _driver = driver;
-            Items = new List<XmlStorageItem>();
+            Items = new List<StorageItem>();
         }
 
         private XmlStorageIndex()
@@ -43,14 +43,25 @@
             }
             else
             {
-                result = new XmlStorageIndex(driver) {Items = new List<XmlStorageItem>()};
+                result = new XmlStorageIndex(driver) {Items = new List<StorageItem>()};
             }
             return result;
+        }
+
+        public int Count()
+        {
+            return Items.Count;
+        }
+
+        public void Add(StorageItem item)
+        {
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            Items.Add(item);
         }
     }
 
     [Serializable]
-    public sealed class XmlStorageItem
+    public sealed class StorageItem
     {
         [XmlAttribute("filename")]
         public string FileName { get; set; }

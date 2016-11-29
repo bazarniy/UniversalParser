@@ -47,7 +47,7 @@
 
         private void ClearWithIndex()
         {
-            var filesToRemove = new List<string>();//_driver.FileEnum(_basePath).ToList();
+            /*var filesToRemove = new List<string>();//_driver.FileEnum(_basePath).ToList();
             var indexFiles = _index.Items.Select(y => y.FileName);
 
             filesToRemove.Remove(_indexPath);
@@ -56,7 +56,7 @@
             foreach (var file in filesToRemove)
             {
                 _driver.Remove(file);
-            }
+            }*/
         }
 
         public void Write(DataInfo info)
@@ -68,7 +68,7 @@
 
         public int Count()
         {
-            return _index.Items.Count;
+            return _index.Count();
         }
 
         public DataInfo GetFile(string fileName)
