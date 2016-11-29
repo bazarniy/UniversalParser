@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Tests
 {
+    using System.IO;
     using Base;
     using NSubstitute;
     using NUnit.Framework;
@@ -19,13 +20,26 @@ namespace Tests
         [SetUp]
         public void TestSetup()
         {
-            /*_path = "testDir";
-            _indexPath = XmlStorage.IndexName;*/
             _driver = Substitute.For<IStorageDriver>();
-            /*_info = new DataInfo("test data");
-            _fakeIndex = new XmlStorageIndex();
-            _fakeIndex.Items.AddRange(new[] { new XmlStorageItem { FileName = "file1.bin", Url = "url1" }, new XmlStorageItem { FileName = "file2.bin", Url = "url2" } });
-            _driverFiles = new[] { _indexPath, "file1.bin", "file2.bin", "file3.bin" };*/
+            _driver.Write(Arg.Is(XmlStorageIndex.IndexName)).Returns(ux => File.Create(XmlStorageIndex.IndexName));
+        }
+
+        [TearDown]
+        public void TestTearDown()
+        {
+            var file = new FileInfo(XmlStorageIndex.IndexName);
+            if (file.Exists) file.Delete();
+        }
+
+        private static void SetIndexExist(IStorageDriver driver)
+        {
+            driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(true);
+            driver.Read(Arg.Is(XmlStorageIndex.IndexName)).Returns(ux => File.OpenRead(XmlStorageIndex.IndexName));
+        }
+
+        private static void SetIndexNotExist(IStorageDriver driver)
+        {
+            driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
         }
 
         [Test]
@@ -36,13 +50,16 @@ namespace Tests
         }
 
         [Test]
-        public void GetIndexNotExist()
+        public void GetIndexArguments()
         {
             Assert.DoesNotThrow(() => XmlStorageIndex.GetIndex(_driver));
             Assert.Catch<ArgumentNullException>(() => XmlStorageIndex.GetIndex(null));
+        }
 
-            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
-            _driver.ClearReceivedCalls();
+        [Test]
+        public void GetIndexNotExist()
+        {
+            SetIndexNotExist(_driver);
 
             var x = XmlStorageIndex.GetIndex(_driver);
 
@@ -51,16 +68,46 @@ namespace Tests
         }
 
         [Test]
-        public void GetIndexExist()
+        public void GetIndexExistEmpty()
         {
-            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(true);
+            SetIndexExist(_driver);
+
+            var ind = new XmlStorageIndex(_driver);
+            ind.Save();
 
             var x = XmlStorageIndex.GetIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
             Assert.AreEqual(x.Items.Count, 0);
+            Assert.DoesNotThrow(x.Save);
         }
 
+        [Test]
+        public void GetIndexExistNotEmpty()
+        {
+            SetIndexExist(_driver);
 
+            var ind = new XmlStorageIndex(_driver);
+            ind.Items.Add(new XmlStorageItem {FileName = "ololo", Url = "azaza"});
+            ind.Items.Add(new XmlStorageItem());
+            ind.Save();
+
+            var x = XmlStorageIndex.GetIndex(_driver);
+
+            _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
+            Assert.AreEqual(x.Items.Count, 2);
+            Assert.DoesNotThrow(x.Save);
+        }
+
+        [Test]
+        public void SaveEmpty()
+        {
+            var ind = new XmlStorageIndex(_driver);
+
+            var file = new FileInfo(XmlStorageIndex.IndexName);
+            Assert.DoesNotThrow(ind.Save);
+            Assert.IsTrue(file.Exists);
+            Assert.Greater(file.Length, 0);
+        }
     }
 }
