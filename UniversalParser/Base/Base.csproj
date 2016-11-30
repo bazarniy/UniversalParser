@@ -60,6 +60,7 @@
     <Compile Include="Serializers\BinarySerealizer.cs" />
     <Compile Include="Serializers\XmlClassSerializer.cs" />
     <Compile Include="Utilities\CloneUtility.cs" />
+    <Compile Include="Utilities\Guard.cs" />
     <Compile Include="Utilities\PathValidator.cs" />
   </ItemGroup>
   <ItemGroup>

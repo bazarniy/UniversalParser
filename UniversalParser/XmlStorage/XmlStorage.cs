@@ -5,64 +5,31 @@
     using System.IO;
     using System.Linq;
     using Base;
+    using Base.Serializers;
     using Base.Utilities;
 
     public class XmlStorage : IDataWriter
     {
-        public const string IndexName = "index.xml";
         private readonly IStorageDriver _driver;
         private readonly string _indexPath;
-
-        private XmlStorageIndex _index;
+        private readonly XmlStorageIndex _index;
 
         public XmlStorage(IStorageDriver storageDriver)
         {
-            if (storageDriver == null) throw new ArgumentNullException(nameof(storageDriver));
+            storageDriver.ThrowIfNull(nameof(storageDriver));
 
             _driver = storageDriver;
-            _indexPath = IndexName;
-
-
-            Initialize();
-        }
-
-        private void Initialize()
-        {
-            //_driver.DirectoryCreate(_basePath);
-
-            if (_driver.Exists(_indexPath))
-            {
-                try
-                {
-                    //_index = _driver.FileRead<XmlStorageIndex>(_indexPath);
-                }
-                catch (Exception ex)
-                {
-                    //TODO: log exception
-                }
-            }
-            _index = _index ?? new XmlStorageIndex(_driver);
-            ClearWithIndex();
-        }
-
-        private void ClearWithIndex()
-        {
-            /*var filesToRemove = new List<string>();//_driver.FileEnum(_basePath).ToList();
-            var indexFiles = _index.Items.Select(y => y.FileName);
-
-            filesToRemove.Remove(_indexPath);
-            filesToRemove.RemoveAll(x => indexFiles.Contains(x));
-
-            foreach (var file in filesToRemove)
-            {
-                _driver.Remove(file);
-            }*/
+            _index = new XmlStorageIndex(_driver);
         }
 
         public void Write(DataInfo info)
         {
-            if (info == null) throw new ArgumentNullException(nameof(info));
-            //_driver.FileWrite(info, Path.Combine(_basePath, _driver.GetRandomFileName()));
+            info.ThrowIfNull(nameof(info));
+
+            var name = _driver.GetRandomName();
+            BinarySerealizer.Save(info, _driver.Write(name));
+
+            _index.Add(new StorageItem {FileName = name, Url = info.Url});
         }
 
 
@@ -73,16 +40,12 @@
 
         public DataInfo GetFile(string fileName)
         {
-            try
+            fileName.ThrowIfEmpty(nameof(fileName));
+            if (_index.Items.Items.Any(x => x.FileName == fileName) && _driver.Exists(fileName))
             {
-                return null;
-                //return _driver.FileExist(fileName) ? _driver.FileRead<DataInfo>(Path.Combine(_basePath, fileName)) : null;
+                return BinarySerealizer.Load<DataInfo>(_driver.Read(fileName));
             }
-            catch (Exception ex)
-            {
-                //TODO: log exception
-                return null;
-            }
+            return null;
         }
     }
 }

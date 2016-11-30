@@ -43,6 +43,7 @@ namespace Tests
         }
 
         // TODO: thread safe Save method
+        // index corruption
 
         [Test]
         public void CtorArguments()
@@ -52,18 +53,11 @@ namespace Tests
         }
 
         [Test]
-        public void GetIndexArguments()
-        {
-            Assert.DoesNotThrow(() => XmlStorageIndex.GetIndex(_driver));
-            Assert.Catch<ArgumentNullException>(() => XmlStorageIndex.GetIndex(null));
-        }
-
-        [Test]
         public void GetIndexNotExist()
         {
             SetIndexNotExist(_driver);
 
-            var x = XmlStorageIndex.GetIndex(_driver);
+            var x = new XmlStorageIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
             Assert.AreEqual(x.Count(), 0);
@@ -72,12 +66,15 @@ namespace Tests
         [Test]
         public void GetIndexExistEmpty()
         {
-            SetIndexExist(_driver);
+            SetIndexNotExist(_driver);
 
             var ind = new XmlStorageIndex(_driver);
             ind.Save();
 
-            var x = XmlStorageIndex.GetIndex(_driver);
+            SetIndexExist(_driver);
+            _driver.ClearReceivedCalls();
+
+            var x = new XmlStorageIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
             Assert.AreEqual(x.Count(), 0);
@@ -87,14 +84,17 @@ namespace Tests
         [Test]
         public void GetIndexExistNotEmpty()
         {
-            SetIndexExist(_driver);
+            SetIndexNotExist(_driver);
 
             var ind = new XmlStorageIndex(_driver);
             ind.Add(new StorageItem {FileName = "ololo", Url = "azaza"});
             ind.Add(new StorageItem());
             ind.Save();
 
-            var x = XmlStorageIndex.GetIndex(_driver);
+            SetIndexExist(_driver);
+            _driver.ClearReceivedCalls();
+
+            var x = new XmlStorageIndex(_driver);
 
             _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
             Assert.AreEqual(x.Count(), 2);

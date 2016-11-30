@@ -11,7 +11,8 @@
 
         public DiskDriver(string path)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path));
+            path.ThrowIfNull(nameof(path));
+
             _basePath = path;
 
             if (path == string.Empty) return;
@@ -63,11 +64,12 @@
 
         private static string GetValidatedName(string name)
         {
-            if (name == null) throw new ArgumentNullException(nameof(name));
+            name.ThrowIfNull(nameof(name));
+            name.ThrowIfEmpty(nameof(name));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("file name is empty", nameof(name));
 
             var fileName = PathValidator.GetLastPathSegment(name);
-            if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentException("file name is empty", nameof(name));
+            fileName.ThrowIfEmpty(nameof(name));
 
             PathValidator.ValidateFilePath(fileName);
             return fileName;

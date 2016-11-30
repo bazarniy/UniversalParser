@@ -4,60 +4,54 @@
     using System.Collections.Generic;
     using System.Xml.Serialization;
     using Base.Serializers;
+    using Base.Utilities;
 
-    [Serializable]
-    [XmlRoot("Index")]
     public sealed class XmlStorageIndex
     {
         public const string IndexName = "index.xml";
-        private IStorageDriver _driver;
+        private readonly IStorageDriver _driver;
 
-        [XmlElement("Item")]
-        private List<StorageItem> Items { get; set; }
+        public StorageIndex Items { get; }
 
         public XmlStorageIndex(IStorageDriver driver)
         {
-            if (driver == null) throw new ArgumentNullException(nameof(driver));
+            driver.ThrowIfNull(nameof(driver));
+
             _driver = driver;
-            Items = new List<StorageItem>();
+            Items = GetIndex(_driver);
         }
 
-        private XmlStorageIndex()
+        private static StorageIndex GetIndex(IStorageDriver driver)
         {
+            return driver.Exists(IndexName) 
+                ? XmlClassSerializer.Load<StorageIndex>(driver.Read(IndexName)) 
+                : new StorageIndex { Items = new List<StorageItem>() };
         }
 
         public void Save()
         {
-            XmlClassSerializer.Save(this, _driver.Write(IndexName));
-        }
-
-        public static XmlStorageIndex GetIndex(IStorageDriver driver)
-        {
-            if (driver == null) throw new ArgumentNullException(nameof(driver));
-
-            XmlStorageIndex result;
-            if (driver.Exists(IndexName))
-            {
-                result = XmlClassSerializer.Load<XmlStorageIndex>(driver.Read(IndexName));
-                result._driver = driver;
-            }
-            else
-            {
-                result = new XmlStorageIndex(driver) {Items = new List<StorageItem>()};
-            }
-            return result;
+            XmlClassSerializer.Save(Items, _driver.Write(IndexName));
         }
 
         public int Count()
         {
-            return Items.Count;
+            return Items.Items.Count;
         }
 
         public void Add(StorageItem item)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
-            Items.Add(item);
+            item.ThrowIfNull(nameof(item));
+
+            Items.Items.Add(item);
         }
+    }
+
+    [Serializable]
+    [XmlRoot("Index")]
+    public sealed class StorageIndex
+    {
+        [XmlElement("Item")]
+        public List<StorageItem> Items { get; set; }
     }
 
     [Serializable]

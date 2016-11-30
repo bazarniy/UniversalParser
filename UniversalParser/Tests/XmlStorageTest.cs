@@ -30,7 +30,7 @@ namespace Tests
         public void TestSetup()
         {
             _path = "testDir";
-            _indexPath = XmlStorage.IndexName;
+            //_indexPath = XmlStorage.IndexName;
             _driver = Substitute.For<IStorageDriver>();
             _info = new DataInfo("test data");
             _fakeIndex = new XmlStorageIndex(_driver);
@@ -45,59 +45,11 @@ namespace Tests
             драйвер должен принимать на вход базовый путь и париться с путями сам
          */
 
-        public static IEnumerable<TestCaseData> StorageCtorArgs
-        {
-            get
-            {
-                yield return new TestCaseData(Substitute.For<IStorageDriver>(), null);
-                yield return new TestCaseData(null, typeof(ArgumentNullException));
-            }
-        }
-
         [Test]
-        [TestCaseSource(nameof(StorageCtorArgs))]
-        public void StorageCtorArguments(IStorageDriver driver, Type exceptionType)
+        public void StorageCtorArguments()
         {
-            if (exceptionType == null)
-            {
-                Assert.DoesNotThrow(() => new XmlStorage(driver));
-            }
-            else
-            {
-                Assert.Catch(exceptionType, () => new XmlStorage(driver));
-            }
-        }
-
-        [Test]
-        public void StorageCtorInitialize_Calls()
-        {
-            var x = _storage;
-            _driver.Received(1).Exists(Arg.Is(_indexPath));
-        }
-
-        [Test]
-        public void StorageCtorInitialize_IndexNotExist()
-        {
-            _driver.Exists(Arg.Is(_indexPath)).Returns(false);
-            Assert.AreEqual(_storage.Count(), 0);
-        }
-
-        [Test]
-        public void StorageCtorInitialize_IndexExist()
-        {
-            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
-            //_driver.FileRead<XmlStorageIndex>(Arg.Is(_indexPath)).Returns(_fakeIndex);
-            Assert.AreNotEqual(_storage.Count(), 0);
-        }
-
-        [Test]
-        public void StorageCtorInitialize_IndexExistCorrupt()
-        {
-            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
-            //_driver.FileRead<XmlStorageIndex>(Arg.Is(_indexPath)).Throws(new SerializationException());
-            XmlStorage stor;
-            Assert.DoesNotThrow(() => stor = _storage);
-            Assert.AreEqual(_storage.Count(), 0);
+            Assert.Catch<ArgumentNullException>(() => new XmlStorage(null));
+            Assert.DoesNotThrow(() => new XmlStorage(Substitute.For<IStorageDriver>()));
         }
 
         [Test]
@@ -117,38 +69,86 @@ namespace Tests
         {
             Assert.Throws<ArgumentNullException>(() => _storage.Write(null));
 
-            var testFileName = "randomFileName";
+            const string testFileName = "randomFileName";
 
             _driver.GetRandomName().Returns(testFileName);
+            _driver.Write(Arg.Any<string>()).Returns(x => new MemoryStream());
             Assert.DoesNotThrow(() => _storage.Write(_info));
 
-            //driver.Received(1).FileWrite(Arg.Any<DataInfo>(), Arg.Is<string>(x => x.EndsWith(testFileName) && x.StartsWith(_path)));
+            _driver.Received(1).Write(Arg.Is(testFileName));
         }
 
         [Test]
         public void Count()
         {
-            Assert.DoesNotThrow(() => _storage.Count());
+            _driver.GetRandomName().Returns("randomFileName");
+            _driver.Write(Arg.Any<string>()).Returns(x => new MemoryStream());
+
+            var stor = _storage;
+
+            Assert.DoesNotThrow(() => stor.Count());
+            Assert.AreEqual(0, stor.Count());
+
+            stor.Write(_info);
+
+            Assert.AreEqual(1, stor.Count());
+        }
+
+        [Test]
+        public void ReadFileArgs()
+        {
+            Assert.Throws<ArgumentException>(() => _storage.GetFile(""));
+        }
+
+        [Test]
+        public void ReadFileNotExist()
+        {
+            var testFileName = "randomFileName";
+            _driver.Exists(Arg.Is(testFileName)).Returns(true);
+            _driver.Read(Arg.Any<string>()).Returns(x => Stream.Null);
+
+            Assert.DoesNotThrow(() => _storage.GetFile(testFileName));
+            Assert.IsNull(_storage.GetFile(testFileName));
+
+            _driver.Received(2).Read(Arg.Is(testFileName));
+        }
+
+        [Test]
+        public void ReadFileNotIndexed()
+        {
+            var testFileName = "randomFileName";
+            Assert.DoesNotThrow(() => _storage.GetFile(testFileName));
+            _driver.DidNotReceive().Read(Arg.Is(testFileName));
         }
 
         [Test]
         public void ReadFile()
         {
             var testFileName = "randomFileName";
-            _driver.Exists(Arg.Is(testFileName)).Returns(true);
 
-            Assert.DoesNotThrow(() => _storage.GetFile(testFileName));
-            //_driver.Received(1).FileRead<DataInfo>(Arg.Is<string>(x => x.EndsWith(testFileName) && x.StartsWith(_path)));
+            _driver.GetRandomName().Returns(testFileName);
+            _driver.Write(Arg.Is(testFileName)).Returns(ux => File.Create(testFileName));
+
+            var stor = _storage;
+            stor.Write(_info);
+
+            _driver.Exists(Arg.Is(testFileName)).Returns(true);
+            _driver.Read(Arg.Is(testFileName)).Returns(ux => File.OpenRead(testFileName));
+
+            Assert.DoesNotThrow(() => stor.GetFile(testFileName));
+            Assert.IsNotNull(stor.GetFile(testFileName));
+
+            _driver.Received(2).Read(Arg.Is(testFileName));
         }
 
         [Test]
-        public void ReadCorruptedFile()
+        public void ReadFileCorrupted()
         {
             var testFileName = "randomFileName";
             _driver.Exists(Arg.Is(testFileName)).Returns(true);
-            //_driver.FileRead<DataInfo>(Arg.Any<string>()).Throws(new SerializationException());
+            _driver.Read(Arg.Any<string>()).Returns(x => new MemoryStream());
 
-            Assert.IsNull(_storage.GetFile(testFileName));
+            Assert.Throws<SerializationException>(() => _storage.GetFile(testFileName));
         }
     }
 }
