@@ -2,11 +2,20 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Xml.Serialization;
     using Base.Serializers;
     using Base.Utilities;
 
-    public sealed class XmlStorageIndex
+    public interface IStorageIndex
+    {
+        void Save();
+        int Count();
+        void Add(StorageItem item);
+        bool Exists(string filename);
+    }
+
+    public sealed class XmlStorageIndex : IStorageIndex
     {
         public const string IndexName = "index.xml";
         private readonly IStorageDriver _driver;
@@ -43,6 +52,12 @@
             item.ThrowIfNull(nameof(item));
 
             Items.Items.Add(item);
+        }
+
+        public bool Exists(string filename)
+        {
+            filename.ThrowIfEmpty(nameof(filename));
+            return Items.Items.Any(x => x.FileName == filename);
         }
     }
 

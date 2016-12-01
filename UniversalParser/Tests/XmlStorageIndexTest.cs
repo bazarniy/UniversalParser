@@ -44,6 +44,7 @@ namespace Tests
 
         // TODO: thread safe Save method
         // index corruption
+        // спрятать за интерфейсом
 
         [Test]
         public void CtorArguments()
@@ -121,6 +122,18 @@ namespace Tests
             Assert.Catch<ArgumentNullException>(() => ind.Add(null));
             ind.Add(new StorageItem());
             Assert.AreEqual(ind.Count(), 1);
+        }
+
+        [Test]
+        public void Exists()
+        {
+            var filename = "testFilename";
+            var ind = new XmlStorageIndex(_driver);
+            Assert.Throws<ArgumentException>(() => ind.Exists(""));
+            Assert.DoesNotThrow(() => ind.Exists(filename));
+            Assert.IsFalse(ind.Exists(filename));
+            ind.Add(new StorageItem {FileName = filename});
+            Assert.IsTrue(ind.Exists(filename));
         }
     }
 }

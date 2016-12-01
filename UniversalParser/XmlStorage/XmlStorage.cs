@@ -12,14 +12,19 @@
     {
         private readonly IStorageDriver _driver;
         private readonly string _indexPath;
-        private readonly XmlStorageIndex _index;
+        private readonly IStorageIndex _index;
 
-        public XmlStorage(IStorageDriver storageDriver)
+        public XmlStorage(IStorageDriver storageDriver) : this(storageDriver, null)
+        {
+
+        }
+
+        public XmlStorage(IStorageDriver storageDriver, IStorageIndex index)
         {
             storageDriver.ThrowIfNull(nameof(storageDriver));
 
             _driver = storageDriver;
-            _index = new XmlStorageIndex(_driver);
+            _index = index ?? new XmlStorageIndex(_driver);
         }
 
         public void Write(DataInfo info)
@@ -41,7 +46,7 @@
         public DataInfo GetFile(string fileName)
         {
             fileName.ThrowIfEmpty(nameof(fileName));
-            if (_index.Items.Items.Any(x => x.FileName == fileName) && _driver.Exists(fileName))
+            if (_index.Exists(fileName) && _driver.Exists(fileName))
             {
                 return BinarySerealizer.Load<DataInfo>(_driver.Read(fileName));
             }
