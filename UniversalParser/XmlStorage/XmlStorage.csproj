@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IStorageDriver.cs" />
+    <Compile Include="StorageDriverFacade.cs" />
     <Compile Include="XmlStorage.cs" />
     <Compile Include="DiskDriver.cs" />
     <Compile Include="XmlStorageIndex.cs" />

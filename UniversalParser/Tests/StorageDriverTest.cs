@@ -66,6 +66,7 @@ namespace Tests
         {
             var x = _driver.GetRandomName();
             Assert.IsNotEmpty(x);
+            Assert.IsTrue(x != _driver.GetRandomName());
         }
 
         [Test]

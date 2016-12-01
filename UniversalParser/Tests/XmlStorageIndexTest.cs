@@ -31,20 +31,7 @@ namespace Tests
             if (file.Exists) file.Delete();
         }
 
-        private static void SetIndexExist(IStorageDriver driver)
-        {
-            driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(true);
-            driver.Read(Arg.Is(XmlStorageIndex.IndexName)).Returns(ux => File.OpenRead(XmlStorageIndex.IndexName));
-        }
-
-        private static void SetIndexNotExist(IStorageDriver driver)
-        {
-            driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
-        }
-
         // TODO: thread safe Save method
-        // index corruption
-        // спрятать за интерфейсом
 
         [Test]
         public void CtorArguments()
@@ -56,49 +43,49 @@ namespace Tests
         [Test]
         public void GetIndexNotExist()
         {
-            SetIndexNotExist(_driver);
+            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
 
             var x = new XmlStorageIndex(_driver);
 
-            _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
             Assert.AreEqual(x.Count(), 0);
         }
 
+        private static readonly StorageItem[][] _indexItems = {new StorageItem[] {}, new[] {new StorageItem {FileName = "ololo", Url = "azaza"}, new StorageItem()}};
+
         [Test]
-        public void GetIndexExistEmpty()
+        [TestCaseSource(nameof(_indexItems))]
+        public void GetIndexExist(StorageItem[] items)
         {
-            SetIndexNotExist(_driver);
+            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(false);
 
             var ind = new XmlStorageIndex(_driver);
+            foreach (var storageItem in items)
+            {
+                ind.Add(storageItem);
+            }
             ind.Save();
 
-            SetIndexExist(_driver);
-            _driver.ClearReceivedCalls();
+            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(true);
+            _driver.Read(Arg.Is(XmlStorageIndex.IndexName)).Returns(ux => File.OpenRead(XmlStorageIndex.IndexName));
 
             var x = new XmlStorageIndex(_driver);
 
-            _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
-            Assert.AreEqual(x.Count(), 0);
+            Assert.AreEqual(x.Count(), items.Length);
             Assert.DoesNotThrow(x.Save);
         }
 
+        private static readonly Stream[] _corruptedStreams = {Stream.Null, new MemoryStream()};
+
         [Test]
-        public void GetIndexExistNotEmpty()
+        [TestCaseSource(nameof(_corruptedStreams))]
+        public void GetIndexExistCorrupted(Stream stream)
         {
-            SetIndexNotExist(_driver);
-
-            var ind = new XmlStorageIndex(_driver);
-            ind.Add(new StorageItem {FileName = "ololo", Url = "azaza"});
-            ind.Add(new StorageItem());
-            ind.Save();
-
-            SetIndexExist(_driver);
-            _driver.ClearReceivedCalls();
+            _driver.Exists(Arg.Is(XmlStorageIndex.IndexName)).Returns(true);
+            _driver.Read(Arg.Is(XmlStorageIndex.IndexName)).Returns(ux => stream);
 
             var x = new XmlStorageIndex(_driver);
 
-            _driver.Received(1).Exists(Arg.Is(XmlStorageIndex.IndexName));
-            Assert.AreEqual(x.Count(), 2);
+            Assert.AreEqual(x.Count(), 0);
             Assert.DoesNotThrow(x.Save);
         }
 

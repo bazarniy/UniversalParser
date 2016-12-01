@@ -32,9 +32,19 @@
 
         private static StorageIndex GetIndex(IStorageDriver driver)
         {
-            return driver.Exists(IndexName) 
-                ? XmlClassSerializer.Load<StorageIndex>(driver.Read(IndexName)) 
-                : new StorageIndex { Items = new List<StorageItem>() };
+            StorageIndex result = null;
+            if (driver.Exists(IndexName))
+            {
+                try
+                {
+                    result = XmlClassSerializer.Load<StorageIndex>(driver.Read(IndexName));
+                }
+                catch (Exception)
+                {
+                    //TODO: log exception
+                }
+            }
+            return result ?? new StorageIndex {Items = new List<StorageItem>()};
         }
 
         public void Save()

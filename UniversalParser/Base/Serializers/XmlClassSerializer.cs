@@ -45,6 +45,8 @@
 
         public static T Load<T>(Stream stream) where T : class
         {
+            if (stream == Stream.Null) return null;
+
             object source;
             var reader = new XmlSerializer(typeof(T));
             using (var streamReader = new StreamReader(stream, Encoding.UTF8))
