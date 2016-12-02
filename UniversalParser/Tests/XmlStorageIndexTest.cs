@@ -98,11 +98,11 @@
         public void AddCount()
         {
             var ind = new XmlStorageIndex(_driver);
-            Assert.AreEqual(ind.Count(), 0);
+            Assert.AreEqual(0, ind.Count());
 
             Assert.Catch<ArgumentNullException>(() => ind.Add(null));
             ind.Add(new StorageItem());
-            Assert.AreEqual(ind.Count(), 1);
+            Assert.AreEqual(1, ind.Count());
         }
 
         [Test]
@@ -115,6 +115,19 @@
             Assert.IsFalse(ind.Exists(filename));
             ind.Add(new StorageItem {FileName = filename});
             Assert.IsTrue(ind.Exists(filename));
+        }
+
+        [Test]
+        public void Remove()
+        {
+            var testname = "name";
+            var ind = new XmlStorageIndex(_driver);
+            Assert.Catch<ArgumentNullException>(() => ind.Remove(null));
+
+            ind.Add(new StorageItem {FileName = testname});
+            Assert.AreEqual(1, ind.Count());
+            ind.Remove(new StorageItem { FileName = testname });
+            Assert.AreEqual(0, ind.Count());
         }
     }
 }

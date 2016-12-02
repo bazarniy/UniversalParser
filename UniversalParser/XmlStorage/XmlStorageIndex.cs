@@ -12,22 +12,27 @@
         void Save();
         int Count();
         void Add(StorageItem item);
+        void Remove(StorageItem item);
         bool Exists(string filename);
+        IEnumerable<StorageItem> Items { get; }
     }
 
     public sealed class XmlStorageIndex : IStorageIndex
     {
         public const string IndexName = "index.xml";
         private readonly IStorageDriver _driver;
+        private readonly object _latch = new object();
 
-        public StorageIndex Items { get; }
+        private readonly StorageIndex _items;
+
+        public IEnumerable<StorageItem> Items => _items.Items.ToArray();
 
         public XmlStorageIndex(IStorageDriver driver)
         {
             driver.ThrowIfNull(nameof(driver));
 
             _driver = driver;
-            Items = GetIndex(_driver);
+            _items = GetIndex(_driver);
         }
 
         private static StorageIndex GetIndex(IStorageDriver driver)
@@ -49,25 +54,39 @@
 
         public void Save()
         {
-            XmlClassSerializer.Save(Items, _driver.Write(IndexName));
+            XmlClassSerializer.Save(_items, _driver.Write(IndexName));
         }
 
         public int Count()
         {
-            return Items.Items.Count;
+            lock(_latch) return _items.Items.Count;
         }
 
         public void Add(StorageItem item)
         {
             item.ThrowIfNull(nameof(item));
 
-            Items.Items.Add(item);
+            lock (_latch)
+            {
+                _items.Items.Add(item);
+                Save();
+            }
+        }
+
+        public void Remove(StorageItem item)
+        {
+            item.ThrowIfNull(nameof(item));
+            lock (_latch)
+            {
+                _items.Items.RemoveAll(x => x.FileName == item.FileName);
+                Save();
+            }
         }
 
         public bool Exists(string filename)
         {
             filename.ThrowIfEmpty(nameof(filename));
-            return Items.Items.Any(x => x.FileName == filename);
+            lock (_latch) return _items.Items.Any(x => x.FileName == filename);
         }
     }
 

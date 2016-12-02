@@ -1,8 +1,5 @@
 ﻿namespace XmlStorage
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using Base;
     using Base.Serializers;
@@ -11,20 +8,31 @@
     public class XmlStorage : IDataWriter
     {
         private readonly IStorageDriver _driver;
-        private readonly string _indexPath;
         private readonly IStorageIndex _index;
-
-        /*public XmlStorage(IStorageDriver storageDriver) : this(storageDriver, null)
-        {
-
-        }*/
 
         public XmlStorage(IStorageDriver storageDriver, IStorageIndex index)
         {
             storageDriver.ThrowIfNull(nameof(storageDriver));
+            index.ThrowIfNull(nameof(index));
 
             _driver = storageDriver;
-            _index = index ?? new XmlStorageIndex(storageDriver);
+            _index = index;
+
+            ClearFilesAndIndex();
+        }
+
+        private void ClearFilesAndIndex()
+        {
+            var files = _driver.Enum().ToArray();
+            foreach (var file in files.Where(x => !_index.Exists(x)))
+            {
+                _driver.Remove(file);
+            }
+
+            foreach (var file in _index.Items.Where(x => !files.Contains(x.FileName)).ToArray())
+            {
+                _index.Remove(file);
+            }
         }
 
         public void Write(DataInfo info)

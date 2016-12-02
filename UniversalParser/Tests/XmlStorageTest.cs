@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Tests
+﻿namespace Tests
 {
+    using System;
     using System.IO;
     using System.Runtime.Serialization;
     using Base;
     using NSubstitute;
-    using NSubstitute.ExceptionExtensions;
     using NUnit.Framework;
     using XmlStorage;
 
@@ -37,37 +31,36 @@ namespace Tests
             if (file.Exists) file.Delete();
         }
 
-        /*
-            после записи файл и url записывается в индекс
-            индекс умеет возвращать коллекцию файлов
-            индекс умеет возвращать коллекцию url
-            драйвер должен принимать на вход базовый путь и париться с путями сам
-         */
-
         [Test]
         public void StorageCtorArguments()
         {
             Assert.Catch<ArgumentNullException>(() => new XmlStorage(null, null));
-            Assert.DoesNotThrow(() => new XmlStorage(_driver, null));
+            Assert.Catch<ArgumentNullException>(() => new XmlStorage(null, _index));
+            Assert.Catch<ArgumentNullException>(() => new XmlStorage(_driver, null));
             Assert.DoesNotThrow(() => new XmlStorage(_driver, _index));
         }
 
-        /*[Test]
-        public void StorageCtorInitialize_IndexClearFiles()
+        [Test]
+        public void StorageCtorInitialize_NonIndexedFiles()
         {
-            _driver.Exists(Arg.Is(_indexPath)).Returns(true);
-            //_driver.Read<XmlStorageIndex>(Arg.Is(_indexPath)).Returns(_fakeIndex);
-            //_driver.Enum(Arg.Is(_path)).Returns(_driverFiles);
+            var files = new[] {"file1.ext", "file2.ext", "file3.ext"};
+            var items = new[] {new StorageItem {FileName = "file1.ext"}, new StorageItem {FileName = "file4.ext"}};
+            var driver = Substitute.For<IStorageDriver>();
+            driver.Enum().Returns(files);
 
-            Assert.AreNotEqual(_storage.Count(), 0);
-            _driver.Received().Remove(Arg.Is(_driverFiles.Last()));
-            _driver.DidNotReceive().Remove(Arg.Is<string>(x => _driverFiles.Take(3).Contains(x)));
-        }*/
+            var index = Substitute.For<IStorageIndex>();
+            index.Items.Returns(items);
+
+            var storage = new XmlStorage(driver, index);
+
+            driver.Received(2).Remove(Arg.Is<string>(x => x == files[1] || x == files[2]));
+            index.Received(1).Remove(Arg.Is<StorageItem>(x => x.FileName == items[1].FileName));
+        }
 
         [Test]
         public void WriteData()
         {
-            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
+            var storage = new XmlStorage(_driver, _index);
             Assert.Throws<ArgumentNullException>(() => storage.Write(null));
 
             _driver.GetRandomName().Returns(TestFileName);
@@ -75,6 +68,7 @@ namespace Tests
             Assert.DoesNotThrow(() => storage.Write(_info));
 
             _driver.Received(1).Write(Arg.Is(TestFileName));
+            _index.Received(1).Add(Arg.Any<StorageItem>());
         }
 
         [Test]
@@ -128,10 +122,11 @@ namespace Tests
             _driver.GetRandomName().Returns(TestFileName);
             _driver.Write(Arg.Is(TestFileName)).Returns(ux => File.Create(TestFileName));
 
-            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
+            var storage = new XmlStorage(_driver, _index);
             storage.Write(_info);
 
             _driver.Exists(Arg.Is(TestFileName)).Returns(true);
+            _index.Exists(Arg.Is(TestFileName)).Returns(true);
             _driver.Read(Arg.Is(TestFileName)).Returns(ux => File.OpenRead(TestFileName));
 
             Assert.DoesNotThrow(() => storage.GetFile(TestFileName));
