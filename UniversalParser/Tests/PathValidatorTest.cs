@@ -28,6 +28,8 @@
         [TestCase(@"X:\file.ext", typeof(ArgumentException))]
         [TestCase(@"C:\", typeof(ArgumentException))]
         [TestCase(@"C:\folder\", typeof(ArgumentException))]
+        [TestCase(@"C:\file.ext;", typeof(ArgumentException))]
+        [TestCase(@"file.ext;", typeof(ArgumentException))]
         public void TestValidateFilePath_Negative(string path, Type expectedException)
         {
             Assert.Catch(expectedException, () => PathValidator.ValidateFilePath(path));
@@ -59,6 +61,8 @@
         [TestCase(@"\\", typeof(ArgumentException))]
         [TestCase(@"\\file.ext", typeof(ArgumentException))]
         [TestCase(@"X:\file.ext", typeof(ArgumentException))]
+        [TestCase(@"C:\;", typeof(ArgumentException))]
+        [TestCase(@"folder\;", typeof(ArgumentException))]
         public void TestValidateFolderPath_Negative(string path, Type expectedException)
         {
             Assert.Catch(expectedException, () => PathValidator.ValidateFolderPath(path));
@@ -92,6 +96,35 @@
         public void TestValidateGetFileName(string path, string result)
         {
             Assert.AreEqual(PathValidator.GetLastPathSegment(path), result);
+        }
+
+        [Test]
+        [TestCase("xxx.ext", typeof(ArgumentException))]
+        [TestCase(@"\\", typeof(ArgumentException))]
+        [TestCase(@"\\file.ext", typeof(ArgumentException))]
+        [TestCase(@"X:\file.ext", typeof(ArgumentException))]
+        [TestCase(@"C:\", typeof(ArgumentException))]
+        [TestCase(@"C:\folder\", typeof(ArgumentException))]
+        [TestCase(@"C:\file.ext;", typeof(ArgumentException))]
+        [TestCase(@"file.ext;", typeof(ArgumentException))]
+        [TestCase(@"xxx\sss", typeof(ArgumentException))]
+        [TestCase(@"C:\xxx.ext", typeof(ArgumentException))]
+        [TestCase(@"C:\folder\xxx.ext", typeof(ArgumentException))]
+        [TestCase(@"C:\folder\xxx", typeof(ArgumentException))]
+        [TestCase(@"C:\folder1\folder2\xxx.ext", typeof(ArgumentException))]
+        [TestCase("ext;", typeof(ArgumentException))]
+        [TestCase("ex>t", typeof(ArgumentException))]
+        public void TestValidateExtention_Negative(string path, Type expectedException)
+        {
+            Assert.Catch(expectedException, () => PathValidator.ValidateExtention(path));
+        }
+
+        [Test]
+        [TestCase("")]
+        [TestCase("xxx")]
+        public void TestValidateExtention_Positive(string path)
+        {
+            Assert.DoesNotThrow(() => PathValidator.ValidateExtention(path));
         }
     }
 }

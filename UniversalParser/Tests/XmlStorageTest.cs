@@ -47,8 +47,7 @@ namespace Tests
         [Test]
         public void StorageCtorArguments()
         {
-            Assert.Catch<ArgumentNullException>(() => new XmlStorage(null));
-            Assert.DoesNotThrow(() => new XmlStorage(_driver));
+            Assert.Catch<ArgumentNullException>(() => new XmlStorage(null, null));
             Assert.DoesNotThrow(() => new XmlStorage(_driver, null));
             Assert.DoesNotThrow(() => new XmlStorage(_driver, _index));
         }
@@ -68,7 +67,7 @@ namespace Tests
         [Test]
         public void WriteData()
         {
-            var storage = new XmlStorage(_driver);
+            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
             Assert.Throws<ArgumentNullException>(() => storage.Write(null));
 
             _driver.GetRandomName().Returns(TestFileName);
@@ -84,7 +83,7 @@ namespace Tests
             _driver.GetRandomName().Returns(TestFileName);
             _driver.Write(Arg.Any<string>()).Returns(x => new MemoryStream());
 
-            var storage = new XmlStorage(_driver);
+            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
 
             Assert.DoesNotThrow(() => storage.Count());
             Assert.AreEqual(0, storage.Count());
@@ -97,7 +96,7 @@ namespace Tests
         [Test]
         public void ReadFileArgs()
         {
-            var storage = new XmlStorage(_driver);
+            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
             Assert.Throws<ArgumentException>(() => storage.GetFile(""));
         }
 
@@ -118,7 +117,7 @@ namespace Tests
         [Test]
         public void ReadFileNotIndexed()
         {
-            var storage = new XmlStorage(_driver);
+            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
             Assert.DoesNotThrow(() => storage.GetFile(TestFileName));
             _driver.DidNotReceive().Read(Arg.Is(TestFileName));
         }
@@ -129,7 +128,7 @@ namespace Tests
             _driver.GetRandomName().Returns(TestFileName);
             _driver.Write(Arg.Is(TestFileName)).Returns(ux => File.Create(TestFileName));
 
-            var storage = new XmlStorage(_driver);
+            var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
             storage.Write(_info);
 
             _driver.Exists(Arg.Is(TestFileName)).Returns(true);
@@ -151,6 +150,14 @@ namespace Tests
 
             var storage = new XmlStorage(_driver, _index);
             Assert.Throws<SerializationException>(() => storage.GetFile(TestFileName));
+        }
+
+        [Test]
+        public void GetStorage()
+        {
+            Assert.Throws<ArgumentException>(() => XmlStorage.GetStorage("", "ext"));
+            Assert.DoesNotThrow(() => XmlStorage.GetStorage("testpath", "ext"));
+            Assert.NotNull(XmlStorage.GetStorage("testpath", "ext"));
         }
     }
 }

@@ -14,17 +14,17 @@
         private readonly string _indexPath;
         private readonly IStorageIndex _index;
 
-        public XmlStorage(IStorageDriver storageDriver) : this(storageDriver, null)
+        /*public XmlStorage(IStorageDriver storageDriver) : this(storageDriver, null)
         {
 
-        }
+        }*/
 
         public XmlStorage(IStorageDriver storageDriver, IStorageIndex index)
         {
             storageDriver.ThrowIfNull(nameof(storageDriver));
 
             _driver = storageDriver;
-            _index = index ?? new XmlStorageIndex(_driver);
+            _index = index ?? new XmlStorageIndex(storageDriver);
         }
 
         public void Write(DataInfo info)
@@ -51,6 +51,14 @@
                 return BinarySerealizer.Load<DataInfo>(_driver.Read(fileName));
             }
             return null;
+        }
+
+        public static XmlStorage GetStorage(string path, string extention)
+        {
+            path.ThrowIfEmpty(nameof(path));
+
+            var driver = new DiskDriver(path);
+            return new XmlStorage(new StorageDriverFacade(extention, driver), new XmlStorageIndex(new StorageDriverFacade("xml", driver)));
         }
     }
 }

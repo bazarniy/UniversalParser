@@ -36,16 +36,38 @@
             return invalidPathChars;
         }
 
+        public static string GetLastPathSegment(string path)
+        {
+            return path.EndsWith(Path.DirectorySeparatorChar.ToString())
+                ? string.Empty
+                : path.Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.None).LastOrDefault();
+        }
+
+        public static void ValidateExtention(string extention)
+        {
+            if (string.IsNullOrWhiteSpace(extention)) return;
+            BasePathValidation(extention);
+            if (!IsValidFileNameChars(extention)) throw new ArgumentException($"invalid character in extention {extention}");
+            if (InvalidFolderCharacters().Any(extention.Contains)) throw new ArgumentException($"invalid character in extention '{extention}'");
+            if (extention.Contains(".")) throw new ArgumentException($"invalid character in extention '{extention}'");
+        }
+
         private static bool IsShare(string path)
         {
             return path.StartsWith(@"\\");
         }
+        private static bool IsMultiple(string path)
+        {
+            return path.Contains(Path.PathSeparator);
+        }
+
 
         private static void BasePathValidation(string path)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path is empty", nameof(path));
             if (IsShare(path)) throw new ArgumentException("is share path", nameof(path));
+            if (IsMultiple(path)) throw new ArgumentException("is multiple path", nameof(path));
         }
 
         private static void FolderPathValidation(string path, string filename = "")
@@ -68,13 +90,6 @@
             return !Path.GetInvalidFileNameChars()
                 .Select(x => x.ToString())
                 .Any(fileName.Contains);
-        }
-
-        public static string GetLastPathSegment(string path)
-        {
-            return path.EndsWith(Path.DirectorySeparatorChar.ToString())
-                ? string.Empty
-                : path.Split(new[] {Path.DirectorySeparatorChar}, StringSplitOptions.None).LastOrDefault();
         }
 
         private static string GetMiddlePathSegment(string path, string label, string filename)
