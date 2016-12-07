@@ -4,10 +4,10 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Threading.Tasks;
     using Base;
     using Base.Helpers;
+    using WebClient;
 
     public class DomainLoader
     {
@@ -17,23 +17,23 @@
         private readonly ConcurrentQueue<string> _urlsToGet = new ConcurrentQueue<string>();
         private readonly List<string> _parsedUrls = new List<string>();
         private readonly object _latch = new object();
+        private readonly IWebClientFactory _clientFactory;
         private int _activeThreads;
 
-        public DomainLoader(string url, IEnumerable<IDataWriter> writers, int maxThread = 10)
+        public DomainLoader(string url, IEnumerable<IDataWriter> writers, IWebClientFactory clientFactory, int maxThread = 10)
+            :this(url, Enumerable.Empty<string>(), writers, clientFactory, maxThread)
         {
-            _writers = writers;
-            _maxThread = maxThread;
-            _domain = UrlHelpers.GetDomain(url);
-            _urlsToGet.Enqueue(url);
+
         }
 
-        public DomainLoader(string url, IEnumerable<string> parsedUrls, IEnumerable<IDataWriter> writers, int maxThread = 10)
+        public DomainLoader(string url, IEnumerable<string> parsedUrls, IEnumerable<IDataWriter> writers, IWebClientFactory clientFactory, int maxThread = 10)
         {
             _writers = writers;
             _maxThread = maxThread;
             _domain = UrlHelpers.GetDomain(url);
             _urlsToGet.Enqueue(url);
             _parsedUrls.AddRange(parsedUrls);
+            _clientFactory = clientFactory;
         }
 
         public void Start()
@@ -49,17 +49,15 @@
             _activeThreads++;
             try
             {
-                using (var wc = new WebClient())
+                using (var wc = _clientFactory.Create())
                 {
                     string url;
                     while (GetLink(out url))
                     {
-                        var info = wc.Download(url);
-                        if (info.Code == 200)
+                        var info = wc.Download(url, _domain);
+                        if (info.Links.Any())
                         {
-                            info.Links = HtmlHelpers.GetLinks(info.Data, info.Url, _domain).ToArray();
                             AddLinks(info.Links);
-
                             Start();
                         }
 

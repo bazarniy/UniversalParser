@@ -41,7 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DomainLoader.cs" />
+    <Compile Include="WebClient\IWebClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WebClient\IWebClientFactory.cs" />
+    <Compile Include="WebClient\WebClient.cs" />
+    <Compile Include="WebClient\WebClientFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Base\Base.csproj">
