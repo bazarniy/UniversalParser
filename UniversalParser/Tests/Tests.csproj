@@ -50,10 +50,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DomainLoaderTest.cs" />
     <Compile Include="PathValidatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageDriverFacadeTest.cs" />
     <Compile Include="StorageDriverTest.cs" />
+    <Compile Include="UrlHelperTest.cs" />
     <Compile Include="XmlStorageIndexTest.cs" />
     <Compile Include="XmlStorageTest.cs" />
   </ItemGroup>
@@ -64,6 +66,10 @@
     <ProjectReference Include="..\Base\Base.csproj">
       <Project>{874c21a4-9cd7-4b2b-9aed-02f4a92558c9}</Project>
       <Name>Base</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Networking\Networking.csproj">
+      <Project>{f8918d2f-5c2b-402b-b1c5-c728053cb257}</Project>
+      <Name>Networking</Name>
     </ProjectReference>
     <ProjectReference Include="..\XmlStorage\XmlStorage.csproj">
       <Project>{ed57ee20-18f0-4ad4-a5c5-a37437f74dac}</Project>

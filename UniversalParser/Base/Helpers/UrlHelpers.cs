@@ -39,6 +39,13 @@
             return currentUrl + (currentUrl.EndsWith("/") ? "" : "/") + link;
         }
 
+        public static bool IsValidDomain(string url)
+        {
+            var domain = GetDomain(url);
+            if (string.IsNullOrWhiteSpace(domain)) return false;
+            if (domain != url) return false;
+            return true;
+        }
 
         public static string GetDomain(string url)
         {

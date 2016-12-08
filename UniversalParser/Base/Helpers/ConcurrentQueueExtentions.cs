@@ -7,6 +7,7 @@
     {
         public static void AddRange(this ConcurrentQueue<string> queue, IEnumerable<string> links)
         {
+            if (links == null) return;
             foreach (var link in links)
                 queue.Enqueue(link);
         }
