@@ -27,42 +27,48 @@ namespace Networking
 
             _client = client;
             _domain = domain;
+            _queue.Enqueue(_domain);
         }
 
-        public async Task Download()
+        public async Task Download(int parralel = 5)
         {
-            var allTasks = new List<Task>();
-            var parsedLinks = new List<string>();
-            _queue.Enqueue(_domain);
+            var allTasks = new Dictionary<string, Task>();
 
-            string link;
-            using (var semaphore = new SemaphoreSlim(5))
+            using (var semaphore = new SemaphoreSlim(parralel))
             {
-                while (_queue.TryDequeue(out link))
+                while (!_queue.IsEmpty)
                 {
-                    await semaphore.WaitAsync();
-                    if (parsedLinks.Contains(link)) continue;
-
-                    allTasks.Add(Task.Run(async () =>
+                    string link;
+                    while (_queue.TryDequeue(out link))
                     {
-                        try
-                        {
-                            using (var client = _client.Create())
-                            {
-                                var result = await client.Download(link, _domain).ConfigureAwait(false);
-                                _queue.AddRange(result.Links);
-                                parsedLinks.Add(link);
-                            }
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
-                    }));
+                        if (allTasks.ContainsKey(link)) continue;
+
+                        allTasks.Add(link, GetLink(link, semaphore));
+                    }
+                    await Task.WhenAll(allTasks.Values);
                 }
-                await Task.WhenAll(allTasks);
             }
 
+        }
+
+        private Task GetLink(string link, SemaphoreSlim semaphore)
+        {
+            return Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    using (var client = _client.Create())
+                    {
+                        var result = await client.Download(link, _domain).ConfigureAwait(false);
+                        _queue.AddRange(result.Links);
+                    }
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
         }
 
 

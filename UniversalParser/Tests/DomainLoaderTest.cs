@@ -30,7 +30,8 @@ namespace Tests
         {
             var factory = Substitute.For<IWebClientFactory>();
             var client = Substitute.For<IWebClient>();
-            client.Download(Arg.Is(TestDomain), Arg.Is(TestDomain)).Returns(new DataInfo(TestDomain) {Links = new string[0]});
+            client.Download(Arg.Any<string>(), Arg.Is(TestDomain)).Returns(DelayReturns(new DataInfo(TestDomain) { Links = new string[0] }));
+            
             factory.Create().Returns(client);
 
             var x = new DomainLoader(factory, TestDomain);
@@ -39,21 +40,36 @@ namespace Tests
         }
 
         [Test]
-        public void Download()
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        public void Download(int parralel)
         {
             var links = new[] { "link1", "link2", TestDomain };
 
             var factory = Substitute.For<IWebClientFactory>();
             var client = Substitute.For<IWebClient>();
-            client.Download(Arg.Any<string>(), Arg.Any<string>()).Returns(new DataInfo("") { Links = new string[0] });
-            client.Download(Arg.Is(TestDomain), Arg.Is(TestDomain)).Returns(new DataInfo(TestDomain) {Links = links });
-            client.Download(Arg.Is(links[0]), Arg.Is(TestDomain)).Returns(new DataInfo(links[0]) { Links = links });
+            client.Download(Arg.Any<string>(), Arg.Any<string>()).Returns(DelayReturns(new DataInfo("") { Links = new string[0] }));
+            client.Download(Arg.Is(TestDomain), Arg.Is(TestDomain)).Returns(DelayReturns(new DataInfo(TestDomain) {Links = links }));
+            client.Download(Arg.Is(links[0]), Arg.Is(TestDomain)).Returns(DelayReturns(new DataInfo(links[0]) { Links = links }));
             factory.Create().Returns(client);
             var x = new DomainLoader(factory, TestDomain);
-            Assert.DoesNotThrowAsync(() => x.Download());
-            client.Received(1).Download(Arg.Is(TestDomain), Arg.Is(TestDomain));
-            client.Received(1).Download(Arg.Is(links[0]), Arg.Is(TestDomain));
-            client.Received(1).Download(Arg.Is(links[1]), Arg.Is(TestDomain));
+            Assert.DoesNotThrowAsync(() => x.Download(parralel));
+            foreach (var link in links)
+            {
+                client.Received(1).Download(Arg.Is(link), Arg.Is(TestDomain));
+            }
+        }
+
+        private static Task<DataInfo> DelayReturns(DataInfo info)
+        {
+            return Task.Run(async () =>
+            {
+                await Task.Delay(500);
+                return info;
+            });
         }
     }
 }
