@@ -17,6 +17,7 @@ namespace Networking
         private readonly IWebClientFactory _client;
         private readonly string _domain;
         private readonly ConcurrentQueue<string> _queue = new ConcurrentQueue<string>();
+        private readonly Dictionary<string, Task> _allTasks = new Dictionary<string, Task>();
 
         public DomainLoader(IWebClientFactory client, string domain)
         {
@@ -32,23 +33,21 @@ namespace Networking
 
         public async Task Download(int parralel = 5)
         {
-            var allTasks = new Dictionary<string, Task>();
-
-            using (var semaphore = new SemaphoreSlim(parralel))
+            using (var semaphore = GetSemaphore(parralel))
             {
+                if (semaphore == null) return;
                 while (!_queue.IsEmpty)
                 {
                     string link;
                     while (_queue.TryDequeue(out link))
                     {
-                        if (allTasks.ContainsKey(link)) continue;
+                        if (_allTasks.ContainsKey(link)) continue;
 
-                        allTasks.Add(link, GetLink(link, semaphore));
+                        _allTasks.Add(link, GetLink(link, semaphore));
                     }
-                    await Task.WhenAll(allTasks.Values);
+                    await Task.WhenAll(_allTasks.Values);
                 }
             }
-
         }
 
         private Task GetLink(string link, SemaphoreSlim semaphore)
@@ -71,6 +70,18 @@ namespace Networking
             });
         }
 
+        private bool _isInit;
+        private readonly object _latch = new object();
+        private SemaphoreSlim GetSemaphore(int parralel)
+        {
+            if (_isInit) return null;
+            lock (_latch)
+            {
+                if (_isInit) return null;
+                _isInit = true;
+                return new SemaphoreSlim(parralel);
+            }
+        }
 
     }
 }
