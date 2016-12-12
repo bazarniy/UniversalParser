@@ -138,5 +138,10 @@
         {
             return node.GetAttributeValue("rowspan", 1);
         }
+
+        public static IEnumerable<HtmlNode> SelectNodesSafe(this HtmlNode node, string xpath)
+        {
+            return node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>();
+        }
     }
 }

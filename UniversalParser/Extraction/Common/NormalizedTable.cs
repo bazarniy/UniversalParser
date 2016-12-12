@@ -1,7 +1,10 @@
 ﻿namespace Extraction.Common
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Base.Helpers;
+    using Base.Utilities;
     using HtmlAgilityPack;
 
     public class NormalizedTable
@@ -13,14 +16,23 @@
 
         public NormalizedTable(HtmlNode htmltable)
         {
-            //TEST: <table><thead><tr><td colspan=\"2\" rowspan=\"2\">1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></thead><tr><td>3</td><td>4</td></tr><tbody><tr><td>3</td><td>4</td></tr></tbody></table>
-
-            var result = htmltable.SelectNodes("tr|*/tr")
+            htmltable.ThrowIfNull(nameof(htmltable));
+            if(htmltable.Name!="table") throw new ArgumentException("Not table node", nameof(htmltable));
+            
+            var result = htmltable.SelectNodesSafe("tr|*/tr")
                 .Select(row =>
-                    row.SelectNodes("th|td")
+                    row.SelectNodesSafe("th|td")
                         .Select(cell => new Cell(cell))
-                        .ToList())
+                        .ToList()
+                        )
                 .ToList();
+
+            if (!result.Any())
+            {
+                _rows = 0;
+                _cols = 0;
+                return;
+            }
 
             for (var i = 0; i < result.Count; i++)
                 for (var j = 0; j < result[i].Count; j++)
