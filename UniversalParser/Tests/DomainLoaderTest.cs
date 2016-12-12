@@ -18,13 +18,20 @@ namespace Tests
     {
         private IWebClientFactory _factory;
         private IWebClient _client;
+        private IDataWriter _writer;
         private const string TestDomain = "http://domain.com";
+
+        private DomainLoader GetNewDomainLoader => new DomainLoader(_factory, _writer, TestDomain);
+
+        //TODO: докачка
+        //TODO: эвенты для обновления или IObservable
 
         [SetUp]
         public void TestSetup()
         {
             _factory = Substitute.For<IWebClientFactory>();
             _client = Substitute.For<IWebClient>();
+            _writer = Substitute.For<IDataWriter>();
 
             _factory.Create().Returns(_client);
         }
@@ -32,10 +39,11 @@ namespace Tests
         [Test]
         public void Ctor()
         {
-            Assert.Throws<ArgumentNullException>(() => new DomainLoader(null, TestDomain));
-            Assert.Throws<ArgumentException>(() => new DomainLoader(_factory, ""));
-            Assert.Throws<ArgumentException>(() => new DomainLoader(_factory, "domain.com"));
-            Assert.DoesNotThrow(() => new DomainLoader(_factory, TestDomain));
+            Assert.Throws<ArgumentNullException>(() => new DomainLoader(null, _writer, TestDomain));
+            Assert.Throws<ArgumentNullException>(() => new DomainLoader(_factory, null, TestDomain));
+            Assert.Throws<ArgumentException>(() => new DomainLoader(_factory, _writer, ""));
+            Assert.Throws<ArgumentException>(() => new DomainLoader(_factory, _writer, "domain.com"));
+            Assert.DoesNotThrow(() => new DomainLoader(_factory, _writer, TestDomain));
         }
 
         [Test]
@@ -43,7 +51,7 @@ namespace Tests
         {
             _client.Download(Arg.Any<string>(), Arg.Is(TestDomain)).Returns(DelayReturns(new DataInfo(TestDomain) { Links = new string[0] }));
 
-            var x = new DomainLoader(_factory, TestDomain);
+            var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download());
             _client.Received(1).Download(Arg.Is(TestDomain), Arg.Is(TestDomain));
         }
@@ -63,7 +71,7 @@ namespace Tests
             }
 
             _client.Download(Arg.Any<string>(), Arg.Any<string>()).Returns(DelayReturns(new DataInfo(TestDomain) { Links = links.ToArray() }));
-            var x = new DomainLoader(_factory, TestDomain);
+            var x = GetNewDomainLoader;
             Parallel.For(0, 100, i => Assert.DoesNotThrowAsync(() => x.Download(parralel)));
             foreach (var link in links)
             {
@@ -72,7 +80,7 @@ namespace Tests
         }
 
         [Test]
-        public void Download2()
+        public void DownloadAnyException()
         {
             var links = new List<string> { TestDomain };
             for (var i = 0; i < 100; i++)
@@ -81,8 +89,15 @@ namespace Tests
             }
 
             _client.Download(Arg.Any<string>(), Arg.Any<string>()).Throws(new ApplicationException("test"));
-            var x = new DomainLoader(_factory, TestDomain);
+            var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download(2));
+            Assert.DoesNotThrow(() => GetNewDomainLoader.GetResults());
+        }
+
+        [Test]
+        public void DownloadGetErrorResults()
+        {
+            Assert.DoesNotThrow(() => GetNewDomainLoader.GetResults());
         }
 
         private static Task<DataInfo> DelayReturns(DataInfo info)

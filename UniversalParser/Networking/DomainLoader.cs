@@ -8,6 +8,7 @@ namespace Networking
 {
     using System.Collections.Concurrent;
     using System.Threading;
+    using Base;
     using Base.Helpers;
     using Base.Utilities;
     using WebClient;
@@ -15,20 +16,28 @@ namespace Networking
     public class DomainLoader
     {
         private readonly IWebClientFactory _client;
+        private readonly IDataWriter _writer;
         private readonly string _domain;
         private readonly ConcurrentQueue<string> _queue = new ConcurrentQueue<string>();
-        private readonly Dictionary<string, Task> _allTasks = new Dictionary<string, Task>();
+        private readonly Dictionary<string, Task<Exception>> _allTasks = new Dictionary<string, Task<Exception>>();
 
-        public DomainLoader(IWebClientFactory client, string domain)
+        public DomainLoader(IWebClientFactory client, IDataWriter writer, string domain)
         {
             client.ThrowIfNull(nameof(client));
+            writer.ThrowIfNull(nameof(writer));
             domain.ThrowIfEmpty(nameof(domain));
 
             if(!UrlHelpers.IsValidDomain(domain)) throw new ArgumentException($"Invalid domain name {domain}", nameof(domain));
 
             _client = client;
+            _writer = writer;
             _domain = domain;
             _queue.Enqueue(_domain);
+        }
+
+        public Dictionary<string, Exception> GetResults()
+        {
+            return _allTasks.ToDictionary(x => x.Key, x => x.Value.Result);
         }
 
         public async Task Download(int parralel = 5)
@@ -50,7 +59,7 @@ namespace Networking
             }
         }
 
-        private Task GetLink(string link, SemaphoreSlim semaphore)
+        private Task<Exception> GetLink(string link, SemaphoreSlim semaphore)
         {
             return Task.Run(async () =>
             {
@@ -61,7 +70,13 @@ namespace Networking
                     {
                         var result = await client.Download(link, _domain).ConfigureAwait(false);
                         _queue.AddRange(result.Links);
+                        _writer.Write(result);
+                        return null;
                     }
+                }
+                catch (Exception ex)
+                {
+                    return ex;
                 }
                 finally
                 {
@@ -82,6 +97,7 @@ namespace Networking
                 return new SemaphoreSlim(parralel);
             }
         }
+
 
     }
 }
