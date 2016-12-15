@@ -11,6 +11,14 @@
         public const string BodyTag = "body";
         public const string ClassAttribute = "class";
 
+        public static IEnumerable<Url> GetLinks(string html, Url url)
+        {
+            return GetHrefValues(html)
+                .Select(url.LinkTo)
+                .Where(x => x.Domain == url.Domain)
+                .Distinct();
+        }
+
         public static IEnumerable<string> GetLinks(string html, string url, string onlyDomain = "")
         {
             var linq = GetHrefValues(html)
@@ -25,7 +33,7 @@
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
             return doc.DocumentNode
-                .SelectNodes("//a[@href")
+                .SelectNodes("//a[@href]")
                 .Select(link => link.GetAttributeValue("href", ""))
                 .Distinct();
         }

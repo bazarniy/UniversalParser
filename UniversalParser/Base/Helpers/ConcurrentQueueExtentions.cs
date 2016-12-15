@@ -5,7 +5,7 @@
 
     public static class ConcurrentQueueExtentions
     {
-        public static void AddRange(this ConcurrentQueue<string> queue, IEnumerable<string> links)
+        public static void AddRange<T>(this ConcurrentQueue<T> queue, IEnumerable<T> links)
         {
             if (links == null) return;
             foreach (var link in links)

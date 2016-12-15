@@ -8,7 +8,7 @@
         public readonly string Url;
         public int Code;
         public string Data;
-        public string[] Links;
+        public Url[] Links;
 
         public DataInfo(string url)
         {

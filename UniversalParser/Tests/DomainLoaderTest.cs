@@ -19,7 +19,7 @@ namespace Tests
         private IWebClientFactory _factory;
         private IWebClient _client;
         private IDataWriter _writer;
-        private const string TestDomain = "http://domain.com";
+        private const string TestDomain = "http://domain.com/";
 
         private DomainLoader GetNewDomainLoader => new DomainLoader(_factory, _writer, TestDomain);
 
@@ -49,11 +49,11 @@ namespace Tests
         [Test]
         public void StartDownload()
         {
-            _client.Download(Arg.Any<string>(), Arg.Is(TestDomain)).Returns(DelayReturns(new DataInfo(TestDomain) { Links = new string[0] }));
+            _client.Download(Arg.Any<Url>()).Returns(DelayReturns(new DataInfo(TestDomain) { Links = new Url[0] }));
 
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download());
-            _client.Received(1).Download(Arg.Is(TestDomain), Arg.Is(TestDomain));
+            _client.Received(1).Download(Arg.Is(new Url(TestDomain)));
         }
 
         [Test]
@@ -64,31 +64,31 @@ namespace Tests
         [TestCase(5)]
         public void Download(int parralel)
         {
-            var links = new List<string> { TestDomain };
+            var links = new List<Url> { new Url(TestDomain) };
             for (var i = 0; i < 100; i++)
             {
-                links.Add($"link{i}");
+                links.Add(new Url(TestDomain + i));
             }
 
-            _client.Download(Arg.Any<string>(), Arg.Any<string>()).Returns(DelayReturns(new DataInfo(TestDomain) { Links = links.ToArray() }));
+            _client.Download(Arg.Any<Url>()).Returns(DelayReturns(new DataInfo(TestDomain) { Links = links.ToArray() }));
             var x = GetNewDomainLoader;
             Parallel.For(0, 100, i => Assert.DoesNotThrowAsync(() => x.Download(parralel)));
             foreach (var link in links)
             {
-                _client.Received(1).Download(Arg.Is(link), Arg.Is(TestDomain));
+                _client.Received(1).Download(Arg.Is(link));
             }
         }
 
         [Test]
         public void DownloadAnyException()
         {
-            var links = new List<string> { TestDomain };
+            var links = new List<Url> { new Url(TestDomain) };
             for (var i = 0; i < 100; i++)
             {
-                links.Add($"link{i}");
+                links.Add(new Url(TestDomain + i));
             }
 
-            _client.Download(Arg.Any<string>(), Arg.Any<string>()).Throws(new ApplicationException("test"));
+            _client.Download(Arg.Any<Url>()).Throws(new ApplicationException("test"));
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download(2));
             Assert.DoesNotThrow(() => GetNewDomainLoader.GetResults());

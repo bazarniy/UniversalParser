@@ -6,6 +6,6 @@
 
     public interface IWebClient : IDisposable
     {
-        Task<DataInfo> Download(string url, string domain);
+        Task<DataInfo> Download(Url url);
     }
 }

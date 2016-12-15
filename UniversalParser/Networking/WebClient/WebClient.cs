@@ -12,13 +12,13 @@
     {
         private readonly System.Net.WebClient _client = new System.Net.WebClient();
 
-        public async Task<DataInfo> Download(string url, string domain)
+        public async Task<DataInfo> Download(Url url)
         {
-            var result = new DataInfo(url);
+            var result = new DataInfo(url.ToString());
             byte[] rawdata;
             try
             {
-                rawdata = await _client.DownloadDataTaskAsync(url);
+                rawdata = await _client.DownloadDataTaskAsync(url.ToString());
             }
             catch (WebException ex) when (ex.Response is HttpWebResponse && ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null)
             {
@@ -30,7 +30,7 @@
                 .GetEncoding(GetCharset())
                 .GetString(rawdata);
 
-            result.Links = HtmlHelpers.GetLinks(result.Data, result.Url, domain).ToArray();
+            result.Links = HtmlHelpers.GetLinks(result.Data, url).ToArray();
 
             return result;
         }

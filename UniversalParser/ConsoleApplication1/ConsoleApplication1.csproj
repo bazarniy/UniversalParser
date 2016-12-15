@@ -68,6 +68,10 @@
       <Project>{f8918d2f-5c2b-402b-b1c5-c728053cb257}</Project>
       <Name>Networking</Name>
     </ProjectReference>
+    <ProjectReference Include="..\XmlStorage\XmlStorage.csproj">
+      <Project>{ed57ee20-18f0-4ad4-a5c5-a37437f74dac}</Project>
+      <Name>XmlStorage</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

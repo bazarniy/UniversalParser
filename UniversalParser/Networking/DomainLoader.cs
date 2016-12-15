@@ -17,27 +17,25 @@ namespace Networking
     {
         private readonly IWebClientFactory _client;
         private readonly IDataWriter _writer;
-        private readonly string _domain;
-        private readonly ConcurrentQueue<string> _queue = new ConcurrentQueue<string>();
-        private readonly Dictionary<string, Task<Exception>> _allTasks = new Dictionary<string, Task<Exception>>();
+        private readonly Url _domain;
+        private readonly ConcurrentQueue<Url> _queue = new ConcurrentQueue<Url>();
+        private readonly Dictionary<Url, Task<Exception>> _allTasks = new Dictionary<Url, Task<Exception>>();
+        private readonly ConcurrentBag<string> _parsed = new ConcurrentBag<string>();
 
         public DomainLoader(IWebClientFactory client, IDataWriter writer, string domain)
         {
             client.ThrowIfNull(nameof(client));
             writer.ThrowIfNull(nameof(writer));
-            domain.ThrowIfEmpty(nameof(domain));
-
-            if(!UrlHelpers.IsValidDomain(domain)) throw new ArgumentException($"Invalid domain name {domain}", nameof(domain));
+            _domain = new Url(domain);
 
             _client = client;
             _writer = writer;
-            _domain = domain;
             _queue.Enqueue(_domain);
         }
 
         public Dictionary<string, Exception> GetResults()
         {
-            return _allTasks.ToDictionary(x => x.Key, x => x.Value.Result);
+            return _allTasks.ToDictionary(x => x.Key.ToString(), x => x.Value.Result);
         }
 
         public async Task Download(int parralel = 5)
@@ -47,11 +45,10 @@ namespace Networking
                 if (semaphore == null) return;
                 while (!_queue.IsEmpty)
                 {
-                    string link;
+                    Url link;
                     while (_queue.TryDequeue(out link))
                     {
                         if (_allTasks.ContainsKey(link)) continue;
-
                         _allTasks.Add(link, GetLink(link, semaphore));
                     }
                     await Task.WhenAll(_allTasks.Values);
@@ -59,7 +56,7 @@ namespace Networking
             }
         }
 
-        private Task<Exception> GetLink(string link, SemaphoreSlim semaphore)
+        private Task<Exception> GetLink(Url link, SemaphoreSlim semaphore)
         {
             return Task.Run(async () =>
             {
@@ -68,7 +65,7 @@ namespace Networking
                 {
                     using (var client = _client.Create())
                     {
-                        var result = await client.Download(link, _domain).ConfigureAwait(false);
+                        var result = await client.Download(link).ConfigureAwait(false);
                         _queue.AddRange(result.Links);
                         _writer.Write(result);
                         return null;
