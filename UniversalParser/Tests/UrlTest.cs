@@ -95,10 +95,29 @@ namespace Tests
         [TestCase("?sdf=sd", "http://test.com")]
         [TestCase("/?sdf=sdf", "http://test.com")]
         [TestCase("//?sdf=sdf", "http://test.com")]
+        [TestCase("/./.", "http://test.com")]
+        [TestCase("http://test.com/./.", "http://test.com")]
+        [TestCase("mailtoololo@sdf.sd", "http://test.com")]
+        [TestCase("http://test.com/mailtoololo@sdf.sd", "http://test.com")]
         public void Path1(string url, string domain)
         {
             var u = new Url(url, domain);
             Assert.AreEqual("/", u.Path);
+        }
+
+        [Test]
+        [TestCase("/../", "/")]
+        [TestCase("/../register.php", "/register.php")]
+        [TestCase("/../../", "/")]
+        [TestCase("/../../register.php", "/register.php")]
+        [TestCase("/test/../", "/")]
+        [TestCase("/test/../register.php", "/register.php")]
+        [TestCase("/test/test/../", "/test")]
+        [TestCase("/test/test/../register.php", "/test/register.php")]
+        public void PathRelative(string url, string result)
+        {
+            var u = new Url(url, "http://test.com");
+            Assert.AreEqual(result, u.Path);
         }
 
         [Test]
@@ -123,6 +142,8 @@ namespace Tests
         [TestCase("/sdf?sdf=sd", "http://test.com")]
         [TestCase("/sdf/?sdf=sdf", "http://test.com")]
         [TestCase("/sdf//?sdf=sdf", "http://test.com")]
+        [TestCase("/sdf/./.", "http://test.com")]
+        [TestCase("http://test.com/sdf/./.", "http://test.com")]
         public void Path2(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -151,6 +172,8 @@ namespace Tests
         [TestCase("/asd/sdf?sdf=sd", "http://test.com")]
         [TestCase("/asd/sdf/?sdf=sdf", "http://test.com")]
         [TestCase("/asd/sdf//?sdf=sdf", "http://test.com")]
+        [TestCase("/asd/sdf/./.", "http://test.com")]
+        [TestCase("http://test.com/asd/sdf/./.", "http://test.com")]
         public void Path3(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -185,6 +208,8 @@ namespace Tests
         [TestCase("sdf/sdf?", "http://test.com")]
         [TestCase("sdf/sdf#2354", "http://test.com")]
         [TestCase("sdf#2354", "http://test.com")]
+        [TestCase("/asd/sdf/./.", "http://test.com")]
+        [TestCase("http://test.com/asd/sdf/./.", "http://test.com")]
         public void Params1(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -206,6 +231,8 @@ namespace Tests
         [TestCase("sdf/sdf?sdf=123#", "http://test.com")]
         [TestCase("sdf/sdf?sdf=123#2354", "http://test.com")]
         [TestCase("sdf/sdf?sdf=123?x=2#", "http://test.com")]
+        [TestCase("/asd/sdf/./.?sdf=123", "http://test.com")]
+        [TestCase("http://test.com/asd/sdf/./.?sdf=123", "http://test.com")]
         public void Params2(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -226,6 +253,8 @@ namespace Tests
         [TestCase("sdf/sdf?sdf=123&x=abs", "http://test.com")]
         [TestCase("sdf/sdf?sdf=123&x=abs#", "http://test.com")]
         [TestCase("sdf/sdf?sdf=123&x=abs#2354", "http://test.com")]
+        [TestCase("/asd/sdf/./.?sdf=123&x=abs", "http://test.com")]
+        [TestCase("http://test.com/asd/sdf/./.?sdf=123&x=abs", "http://test.com")]
         public void Params3(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -265,8 +294,12 @@ namespace Tests
         [TestCase("?sdf=123?&sfg=3#sdf", "http://test.com/sdf/sdf?sdf=123")]
         [TestCase("mailto:dsfg@dfg.rw", "http://test.com/sdf/sdf?sdf=123&x=abs")]
         [TestCase("javascript:xfg4444", "http://test.com/sdf/sdf?sdf=123&x=abs")]
+        [TestCase("mailtoololo@sdf.sd", "http://test.com/sdf/sdf?sdf=123&x=abs")]
+        [TestCase("http://test2.com/mailtoololo@sdf.sd", "http://test2.com/")]
         [TestCase("/http://test2.com", "http://test2.com/")]
         [TestCase("http://test2com", "http://test.com/sdf/sdf?sdf=123&x=abs")]
+        [TestCase("/asd/sdf/./.?sdf=123&x=abs", "http://test.com/asd/sdf?sdf=123&x=abs")]
+        [TestCase("http://test.com/asd/sdf/./.?sdf=123&x=abs", "http://test.com/asd/sdf?sdf=123&x=abs")]
         public void LinkTo(string url, string result)
         {
             Assert.AreEqual(result, BaseUrl.LinkTo(url).ToString());

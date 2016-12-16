@@ -21,7 +21,7 @@
         private const string DomainPattern = @"https?:\/\/([\w\d-]*\.)?[\w\d-]*\.[\w]*";
         private static readonly Regex _domainRegex = new Regex(DomainPattern, RegexOptions.Compiled);
         private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz" };
-        private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:" };
+        private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:", "skype:" };
 
         public string Domain { get; private set; }
         public string Path { get; private set; }
@@ -40,6 +40,8 @@
             Domain.ThrowIfEmpty(nameof(Domain), "invalid domain");
 
             Path = GetPath(url, Domain);
+            if (IsMailtoError(Path)) Path = PathDelimeterString;
+
             _params = GetParams(url);
         }
 
@@ -53,7 +55,7 @@
                 .RemoveRight(PathParamsDelimeterChar)
                 .RemoveFirst(domain)
                 .TrimEnd(PathDelimeterChar);
-
+            result = FixPathParent(result);
             return !result.IsEmpty() ? result : PathDelimeterString;
         }
 
@@ -82,6 +84,8 @@
                 Path = GetPath(url, Domain),
                 _params = GetParams(url)
             };
+
+            if (IsMailtoError(result.Path)) return this;
 
             result.Path = Path + (result.Path != PathDelimeterString ? PathDelimeterString + result.Path : "");
 
@@ -121,6 +125,37 @@
         {
             var domain = _domainRegex.Match(url).Value;
             return domain.IsEmpty() ? null : domain;
+        }
+
+        private static bool IsMailtoError(string path)
+        {
+            return path.Contains("mailto") && path.Contains("@");
+        }
+
+        private static string FixPathParent(string path)
+        {
+            while (path.Contains("/./"))
+            {
+                path = path.Replace("/./", "/");
+            }
+            while (path.EndsWith("/."))
+            {
+                path = path.Substring(0, path.Length - 2);
+            }
+            while (path.Contains("/../"))
+            {
+                var index = path.IndexOf("/../", StringComparison.Ordinal);
+                var indexDelimeter = path.Substring(0, index).LastIndexOf("/", StringComparison.Ordinal);
+                path = path.Substring(0, indexDelimeter < 0 ? index : indexDelimeter) + "/" + path.Substring(index + 4);
+            }
+            while (path.EndsWith("/.."))
+            {
+                path = path.Substring(0, path.Length - 3);
+                var index = path.LastIndexOf("/", StringComparison.Ordinal);
+                path = index >= 0 ? path.Substring(0, index) : path;
+            }
+
+            return path;
         }
     }
 }
