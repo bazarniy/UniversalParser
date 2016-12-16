@@ -40,7 +40,11 @@
             Domain.ThrowIfEmpty(nameof(Domain), "invalid domain");
 
             Path = GetPath(url, Domain);
-            if (IsMailtoError(Path)) Path = PathDelimeterString;
+            while (IsMailtoError(Path))
+            {
+                var indexDelimeter = Path.LastIndexOf("/", StringComparison.Ordinal);
+                Path = indexDelimeter >= 0 ? Path.Substring(0, indexDelimeter + 1) : "";
+            }
 
             _params = GetParams(url);
         }
@@ -53,10 +57,13 @@
         {
             var result = url.RemoveRight(PathAnchorDelimeterChar)
                 .RemoveRight(PathParamsDelimeterChar)
-                .RemoveFirst(domain)
-                .TrimEnd(PathDelimeterChar);
+                .RemoveFirst(domain);
+            while (result.EndsWith("//"))
+            {
+                result = result.Substring(0, result.Length - 1);
+            }
             result = FixPathParent(result);
-            return !result.IsEmpty() ? result : PathDelimeterString;
+            return result;
         }
 
         private static IEnumerable<string> GetParams(string url)
@@ -87,7 +94,24 @@
 
             if (IsMailtoError(result.Path)) return this;
 
-            result.Path = Path + (result.Path != PathDelimeterString ? PathDelimeterString + result.Path : "");
+            if (result.Path != PathDelimeterString && !result.Path.IsEmpty())
+            {
+                if (!Path.EndsWith("/"))
+                {
+                    var indexDelimeter = Path.LastIndexOf("/", StringComparison.Ordinal);
+                    var path = indexDelimeter >= 0 ? Path.Substring(0, indexDelimeter + 1) : "";
+
+                    result.Path = path + result.Path;
+                }
+                else
+                {
+                    result.Path = Path + result.Path;
+                }
+            }
+            else
+            {
+                result.Path = Path;
+            }
 
             return result;
         }
@@ -134,13 +158,19 @@
 
         private static string FixPathParent(string path)
         {
-            while (path.Contains("/./"))
+            if (path.Contains("/./") || path.EndsWith("/."))
             {
-                path = path.Replace("/./", "/");
-            }
-            while (path.EndsWith("/."))
-            {
-                path = path.Substring(0, path.Length - 2);
+                if (path.EndsWith("/./")) path = path.Substring(0, path.Length - 1);
+                while (path.EndsWith("/."))
+                {
+                    path = path.Substring(0, path.Length - 2);
+                }
+                if (path.Length != 0 && !path.Contains("/./")) path += "/";
+
+                while (path.Contains("/./"))
+                {
+                    path = path.Replace("/./", "/");
+                }
             }
             while (path.Contains("/../"))
             {

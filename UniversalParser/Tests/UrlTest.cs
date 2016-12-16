@@ -22,7 +22,7 @@ namespace Tests
             Assert.Throws<ArgumentException>(() => new Url(""));
             Assert.Throws<ArgumentException>(() => new Url("/", "invaliddomain"));
             Assert.DoesNotThrow(() => new Url("http://test.com", "http://test2.com"));
-            Assert.AreEqual("http://test.com/", new Url("http://test.com", "http://test2.com").ToString());
+            Assert.AreEqual("http://test.com", new Url("http://test.com", "http://test2.com").ToString());
             Assert.Throws<ArgumentException>(() => new Url("http://testcom"));
             Assert.DoesNotThrow(() => new Url("/sdf", "http://test2.com"));
             Assert.Throws<ArgumentException>(() => new Url("/sdf"));
@@ -129,8 +129,6 @@ namespace Tests
         [TestCase("http://test.com//?sdf=2354", "")]
         [TestCase("/?sdf=sdf", "http://test.com")]
         [TestCase("//?sdf=sdf", "http://test.com")]
-        [TestCase("http://test.com/./.", "http://test.com")]
-        [TestCase("http://test.com/mailtoololo@sdf.sd", "http://test.com")]
         public void Path1(string url, string domain)
         {
             var u = new Url(url, domain);
@@ -300,7 +298,7 @@ namespace Tests
 
         [Test]
         [TestCase("", "http://test.com/sdf/sdf?sdf=123&x=abs")]
-        [TestCase("http://test.com", "http://test.com/")]
+        [TestCase("http://test.com", "http://test.com")]
         [TestCase("http://ololo.com/fg?sdf=123#sdf", "http://ololo.com/fg?sdf=123")]
         [TestCase("/", "http://test.com/")]
         [TestCase("/sdf", "http://test.com/sdf")]
@@ -315,19 +313,19 @@ namespace Tests
         [TestCase("/sdf/sdf/?sdf=123&sfg=3#sdf", "http://test.com/sdf/sdf/?sdf=123&sfg=3")]
         [TestCase("/?sdf=123&sfg=3#sdf", "http://test.com/?sdf=123&sfg=3")]
         [TestCase("/?sdf=123?&sfg=3#sdf", "http://test.com/?sdf=123")]
-        [TestCase("sdf", "http://test.com/sdf/sdf/sdf")]
-        [TestCase("sdf/", "http://test.com/sdf/sdf/sdf/")]
-        [TestCase("sdf/sdf", "http://test.com/sdf/sdf/sdf/sdf")]
-        [TestCase("sdf/sdf/", "http://test.com/sdf/sdf/sdf/sdf/")]
-        [TestCase("sdf/sdf?sdf=123", "http://test.com/sdf/sdf/sdf/sdf?sdf=123")]
-        [TestCase("sdf/sdf/?sdf=123", "http://test.com/sdf/sdf/sdf/sdf/?sdf=123")]
-        [TestCase("sdf/sdf?sdf=123&sfg=3", "http://test.com/sdf/sdf/sdf/sdf?sdf=123&sfg=3")]
-        [TestCase("sdf/sdf/?sdf=123&sfg=3", "http://test.com/sdf/sdf/sdf/sdf/?sdf=123&sfg=3")]
-        [TestCase("sdf/sdf?sdf=123&sfg=3#sdf", "http://test.com/sdf/sdf/sdf/sdf?sdf=123&sfg=3")]
-        [TestCase("sdf/sdf/?sdf=123&sfg=3#sdf", "http://test.com/sdf/sdf/sdf/sdf/?sdf=123&sfg=3")]
+        [TestCase("sdf", "http://test.com/sdf/sdf")]
+        [TestCase("sdf/", "http://test.com/sdf/sdf/")]
+        [TestCase("sdf/sdf", "http://test.com/sdf/sdf/sdf")]
+        [TestCase("sdf/sdf/", "http://test.com/sdf/sdf/sdf/")]
+        [TestCase("sdf/sdf?sdf=123", "http://test.com/sdf/sdf/sdf?sdf=123")]
+        [TestCase("sdf/sdf/?sdf=123", "http://test.com/sdf/sdf/sdf/?sdf=123")]
+        [TestCase("sdf/sdf?sdf=123&sfg=3", "http://test.com/sdf/sdf/sdf?sdf=123&sfg=3")]
+        [TestCase("sdf/sdf/?sdf=123&sfg=3", "http://test.com/sdf/sdf/sdf/?sdf=123&sfg=3")]
+        [TestCase("sdf/sdf?sdf=123&sfg=3#sdf", "http://test.com/sdf/sdf/sdf?sdf=123&sfg=3")]
+        [TestCase("sdf/sdf/?sdf=123&sfg=3#sdf", "http://test.com/sdf/sdf/sdf/?sdf=123&sfg=3")]
         [TestCase("?sdf=123&afg=3#sdf", "http://test.com/sdf/sdf?afg=3&sdf=123")]
         [TestCase("?sdf=123?&sfg=3#sdf", "http://test.com/sdf/sdf?sdf=123")]
-        [TestCase("/http://test2.com", "http://test2.com/")]
+        [TestCase("/http://test2.com", "http://test2.com")]
         [TestCase("http://test2com", "http://test.com/sdf/sdf?sdf=123&x=abs")]
         public void LinkTo(string url, string result)
         {
@@ -337,14 +335,14 @@ namespace Tests
         [Test]
         public void LinkToPage()
         {
-            var url=new Url("https://www.iek.ru/products/catalog/index.php");
+            var url = new Url("https://www.iek.ru/products/catalog/index.php");
             Assert.AreEqual("https://www.iek.ru/products/catalog/detail.php?ID=1", url.LinkTo("detail.php?ID=1").ToString());
             url = new Url("https://www.iek.ru/products/catalog/index.php/");
             Assert.AreEqual("https://www.iek.ru/products/catalog/index.php/detail.php?ID=1", url.LinkTo("detail.php?ID=1").ToString());
         }
 
         [Test]
-        [TestCase("http://test.com?sdf=1&amp;qgen=2", "http://test.com/?qgen=2&sdf=1")]
+        [TestCase("http://test.com?sdf=1&amp;qgen=2", "http://test.com?qgen=2&sdf=1")]
         public void UrlDecode(string url, string result)
         {
             Assert.AreEqual(result, new Url(url).ToString());
