@@ -21,7 +21,7 @@
         private const string DomainPattern = @"https?:\/\/([\w\d-]*\.)?[\w\d-]*\.[\w]*";
         private static readonly Regex _domainRegex = new Regex(DomainPattern, RegexOptions.Compiled);
         private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz" };
-        private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:", "skype:" };
+        private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:", "skype:", "fax:", "modem:" };
 
         public string Domain { get; private set; }
         public string Path { get; private set; }

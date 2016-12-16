@@ -66,6 +66,10 @@ namespace Networking
                     using (var client = _client.Create())
                     {
                         var result = await client.Download(link).ConfigureAwait(false);
+                        if (result.Links.Any(x => x.ToString().Contains("products/catalog/index.php")))
+                        {
+                            Console.WriteLine(result.Url);
+                        }
                         _queue.AddRange(result.Links);
                         _writer.Write(result);
                         return null;
