@@ -266,6 +266,7 @@ namespace Tests
         [TestCase("mailto:dsfg@dfg.rw", "http://test.com/sdf/sdf?sdf=123&x=abs")]
         [TestCase("javascript:xfg4444", "http://test.com/sdf/sdf?sdf=123&x=abs")]
         [TestCase("/http://test2.com", "http://test2.com/")]
+        [TestCase("http://test2com", "http://test.com/sdf/sdf?sdf=123&x=abs")]
         public void LinkTo(string url, string result)
         {
             Assert.AreEqual(result, BaseUrl.LinkTo(url).ToString());

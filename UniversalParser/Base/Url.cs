@@ -17,6 +17,7 @@
         private const char PathAnchorDelimeterChar = '#';
         private const char ParamsDelimeterChar = '&';
         private const string ParamsDelimeterString = "&";
+        private const string ProtocolDelimeter = "://";
         private const string DomainPattern = @"https?:\/\/([\w\d-]*\.)?[\w\d-]*\.[\w]*";
         private static readonly Regex _domainRegex = new Regex(DomainPattern, RegexOptions.Compiled);
         private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz" };
@@ -27,10 +28,7 @@
 
         private IEnumerable<string> _params;
 
-        public string Params
-        {
-            get { return string.Join(ParamsDelimeterString, _params.OrderBy(s => s)); }
-        }
+        public string Params => string.Join(ParamsDelimeterString, _params.OrderBy(s => s));
 
         public Url(string url, string domain = "")
         {
@@ -53,20 +51,20 @@
         {
             var result = url.RemoveRight(PathAnchorDelimeterChar)
                 .RemoveRight(PathParamsDelimeterChar)
-                .RemoveFirst(domain);
+                .RemoveFirst(domain)
+                .TrimEnd(PathDelimeterChar);
 
-            if (result.EndsWith(PathDelimeterString)) result = result.TrimEnd(PathDelimeterChar);
             return !result.IsEmpty() ? result : PathDelimeterString;
         }
 
         private static IEnumerable<string> GetParams(string url)
         {
-            if (!url.Contains(PathParamsDelimeterChar)) return Enumerable.Empty<string>();
-
-            return url.RemoveRight(PathAnchorDelimeterChar)
-                .RemoveLeft(PathParamsDelimeterChar)
-                .RemoveRight(PathParamsDelimeterChar) //?dsfgd=12/?sdf=df => dsfgd=12
-                .Split(new[] { ParamsDelimeterChar }, StringSplitOptions.RemoveEmptyEntries);
+            return url.Contains(PathParamsDelimeterChar)
+                ? url.RemoveRight(PathAnchorDelimeterChar)
+                    .RemoveLeft(PathParamsDelimeterChar)
+                    .RemoveRight(PathParamsDelimeterChar) //?dsfgd=12/?sdf=df => dsfgd=12
+                    .Split(new[] {ParamsDelimeterChar}, StringSplitOptions.RemoveEmptyEntries)
+                : Enumerable.Empty<string>();
         }
 
         public Url LinkTo(string url)
@@ -75,7 +73,8 @@
 
             if (url.IsEmpty() || !IsContent(url)) return this;
             if (ParseDomain(url) != null) return new Url(url);
-            if (IsAbsolute(url)) return new Url(url, Domain);
+            if (url.Contains(ProtocolDelimeter)) return this; //invalid domain like http://testxom
+            if (url.StartsWith(PathDelimeterString)) return new Url(url, Domain);
 
             var result = new Url
             {
@@ -111,14 +110,11 @@
             return HttpUtility.HtmlDecode(Uri.UnescapeDataString(url));
         }
 
-        private static bool IsAbsolute(string url)
-        {
-            return url.StartsWith(PathDelimeterString);
-        }
-
         private static bool IsContent(string url)
         {
-            return !url.StartsWith(_nonPageSubstringStarts) && !url.EndsWith(_nonPageSubstrings) && !url.Contains(_nonPageSubstrings.Select(x => x + PathParamsDelimeterString));
+            return !url.StartsWith(_nonPageSubstringStarts) 
+                && !url.EndsWith(_nonPageSubstrings) 
+                && !url.Contains(_nonPageSubstrings.Select(x => x + PathParamsDelimeterString));
         }
 
         private static string ParseDomain(string url)
