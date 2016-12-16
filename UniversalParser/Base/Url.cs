@@ -42,8 +42,7 @@
             Path = GetPath(url, Domain);
             while (IsMailtoError(Path))
             {
-                var indexDelimeter = Path.LastIndexOf("/", StringComparison.Ordinal);
-                Path = indexDelimeter >= 0 ? Path.Substring(0, indexDelimeter + 1) : "";
+                Path = RemoveLastSegment(Path);
             }
 
             _params = GetParams(url);
@@ -94,24 +93,17 @@
 
             if (IsMailtoError(result.Path)) return this;
 
+            var path = Path;
+
             if (result.Path != PathDelimeterString && !result.Path.IsEmpty())
             {
-                if (!Path.EndsWith("/"))
+                if (!path.EndsWith("/"))
                 {
-                    var indexDelimeter = Path.LastIndexOf("/", StringComparison.Ordinal);
-                    var path = indexDelimeter >= 0 ? Path.Substring(0, indexDelimeter + 1) : "";
-
-                    result.Path = path + result.Path;
+                    path = RemoveLastSegment(path);
                 }
-                else
-                {
-                    result.Path = Path + result.Path;
-                }
+                path = path + result.Path;
             }
-            else
-            {
-                result.Path = Path;
-            }
+            result.Path = path;
 
             return result;
         }
@@ -186,6 +178,12 @@
             }
 
             return path;
+        }
+
+        private static string RemoveLastSegment(string path)
+        {
+            var indexDelimeter = path.LastIndexOf("/", StringComparison.Ordinal);
+            return indexDelimeter >= 0 ? path.Substring(0, indexDelimeter + 1) : "";
         }
     }
 }
