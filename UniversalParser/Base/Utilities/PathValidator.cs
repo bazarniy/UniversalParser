@@ -6,6 +6,7 @@
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using Helpers;
 
     public static class PathValidator
     {
@@ -14,7 +15,7 @@
             BasePathValidation(path);
 
             var filename = GetLastPathSegment(path);
-            if (string.IsNullOrWhiteSpace(filename)) throw new ArgumentException("filename is empty");
+            filename.ThrowIfEmpty(nameof(filename), "filename is empty");
             if (!IsValidFileNameChars(filename)) throw new ArgumentException($"invalid character in filename {filename}");
 
             FolderPathValidation(path, filename);
@@ -45,7 +46,7 @@
 
         public static void ValidateExtention(string extention)
         {
-            if (string.IsNullOrWhiteSpace(extention)) return;
+            if (extention.IsEmpty()) return;
             BasePathValidation(extention);
             if (!IsValidFileNameChars(extention)) throw new ArgumentException($"invalid character in extention {extention}");
             if (InvalidFolderCharacters().Any(extention.Contains)) throw new ArgumentException($"invalid character in extention '{extention}'");
@@ -61,11 +62,10 @@
             return path.Contains(Path.PathSeparator);
         }
 
-
         private static void BasePathValidation(string path)
         {
-            if (path == null) throw new ArgumentNullException(nameof(path));
-            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path is empty", nameof(path));
+            path.ThrowIfNull(nameof(path));
+            path.ThrowIfEmpty(nameof(path));
             if (IsShare(path)) throw new ArgumentException("is share path", nameof(path));
             if (IsMultiple(path)) throw new ArgumentException("is multiple path", nameof(path));
         }
@@ -81,8 +81,7 @@
 
         private static bool IsValidDiskLabel(string label)
         {
-            return string.IsNullOrWhiteSpace(label)
-                   || Environment.GetLogicalDrives().Contains(label.ToUpper(CultureInfo.CurrentCulture));
+            return label.IsEmpty() || Environment.GetLogicalDrives().Contains(label.ToUpper(CultureInfo.CurrentCulture));
         }
 
         private static bool IsValidFileNameChars(string fileName)

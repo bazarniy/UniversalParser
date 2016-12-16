@@ -36,6 +36,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -51,7 +52,6 @@
     <Compile Include="Helpers\HtmlHelpers.cs" />
     <Compile Include="Helpers\ConcurrentBagExtentions.cs" />
     <Compile Include="Helpers\StringExtentions.cs" />
-    <Compile Include="Helpers\UrlHelpers.cs" />
     <Compile Include="IDataReader.cs" />
     <Compile Include="IDataWriter.cs" />
     <Compile Include="ISiteStorage.cs" />

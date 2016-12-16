@@ -271,6 +271,13 @@ namespace Tests
             Assert.AreEqual(result, BaseUrl.LinkTo(url).ToString());
         }
 
-
+        [Test]
+        [TestCase("http://test.com?sdf=1&amp;qgen=2", "http://test.com/?qgen=2&sdf=1")]
+        public void UrlDecode(string url, string result)
+        {
+            Assert.AreEqual(result, new Url(url).ToString());
+            Assert.AreEqual(result, BaseUrl.LinkTo(url).ToString());
+            
+        }
     }
 }

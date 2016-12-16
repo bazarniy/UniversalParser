@@ -30,15 +30,15 @@
             var cl = useClass ? GetXPathClassParam() : "";
 
             var attr = "";
-            if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(cl))
+            if (!id.IsEmpty() && !cl.IsEmpty())
             {
                 attr = $"[{id} and {cl}]";
             }
-            else if (!string.IsNullOrWhiteSpace(id))
+            else if (!id.IsEmpty())
             {
                 attr = $"[{id}]";
             }
-            else if (!string.IsNullOrWhiteSpace(cl))
+            else if (!cl.IsEmpty())
             {
                 attr = $"[{cl}]";
             }

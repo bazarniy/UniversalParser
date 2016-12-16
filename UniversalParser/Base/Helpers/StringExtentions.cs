@@ -31,5 +31,28 @@
                 (current, ch) => current.Replace(ch, string.Empty)
                 );
         }
+
+        public static string RemoveRight(this string data, char searchChar)
+        {
+            var index = data.IndexOf(searchChar);
+            return index >= 0 ? data.Substring(0, index) : data;
+        }
+
+        public static string RemoveLeft(this string data, char searchChar)
+        {
+            var index = data.IndexOf(searchChar);
+            return index >= 0 ? data.Substring(index + 1) : data;
+        }
+
+        public static string RemoveFirst(this string data, string text)
+        {
+            var index = data.ToUpperInvariant().IndexOf(text.ToUpperInvariant(), StringComparison.Ordinal);
+            return index >= 0 ? data.Substring(index + text.Length) : data;
+        }
+
+        public static bool IsEmpty(this string url)
+        {
+            return string.IsNullOrWhiteSpace(url);
+        }
     }
 }

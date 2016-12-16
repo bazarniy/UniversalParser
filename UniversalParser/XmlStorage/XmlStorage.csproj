@@ -47,7 +47,6 @@
     <Compile Include="XmlStorage.cs" />
     <Compile Include="DiskDriver.cs" />
     <Compile Include="XmlStorageIndex.cs" />
-    <Compile Include="XmlSiteStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

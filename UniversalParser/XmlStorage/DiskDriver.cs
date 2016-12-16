@@ -66,7 +66,6 @@
         {
             name.ThrowIfNull(nameof(name));
             name.ThrowIfEmpty(nameof(name));
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("file name is empty", nameof(name));
 
             var fileName = PathValidator.GetLastPathSegment(name);
             fileName.ThrowIfEmpty(nameof(name));

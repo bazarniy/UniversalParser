@@ -13,19 +13,16 @@
 
         public static IEnumerable<Url> GetLinks(string html, Url url)
         {
+            if (html.IsEmpty()) return Enumerable.Empty<Url>();
             return GetHrefValues(html)
                 .Select(url.LinkTo)
                 .Where(x => x.Domain == url.Domain)
                 .Distinct();
         }
 
-        public static IEnumerable<string> GetLinks(string html, string url, string onlyDomain = "")
+        public static IEnumerable<Url> GetLinks(string html, string url)
         {
-            var linq = GetHrefValues(html)
-                .Select(x => UrlHelpers.CanonicalizePageLink(x, url))
-                .Where(link => !string.IsNullOrEmpty(link));
-            if (!string.IsNullOrWhiteSpace(onlyDomain)) linq = linq.Where(x => x.StartsWith(onlyDomain));
-            return linq.Distinct();
+            return GetLinks(html, new Url(url));
         }
 
         private static IEnumerable<string> GetHrefValues(string html)

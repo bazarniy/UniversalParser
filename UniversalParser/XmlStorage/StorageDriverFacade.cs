@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.IO;
+    using Base.Helpers;
     using Base.Utilities;
 
     public class StorageDriverFacade:IStorageDriver
@@ -17,7 +18,7 @@
             if (extention.Length > 3) throw new ArgumentException("extention is too long", nameof(extention));
             PathValidator.ValidateExtention(extention);
 
-            _extention = string.IsNullOrWhiteSpace(extention) ? "" : "." + extention;
+            _extention = extention.IsEmpty() ? "" : "." + extention;
             _driver = driver;
         }
 

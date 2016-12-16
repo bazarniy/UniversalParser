@@ -60,7 +60,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StorageDriverFacadeTest.cs" />
     <Compile Include="StorageDriverTest.cs" />
-    <Compile Include="UrlHelperTest.cs" />
     <Compile Include="UrlTest.cs" />
     <Compile Include="XmlStorageIndexTest.cs" />
     <Compile Include="XmlStorageTest.cs" />

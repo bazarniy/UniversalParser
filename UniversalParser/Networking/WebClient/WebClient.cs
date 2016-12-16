@@ -30,8 +30,6 @@
                 .GetEncoding(GetCharset())
                 .GetString(rawdata);
 
-            result.Links = HtmlHelpers.GetLinks(result.Data, url).ToArray();
-
             return result;
         }
 
