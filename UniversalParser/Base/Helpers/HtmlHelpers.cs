@@ -11,28 +11,23 @@
         public const string BodyTag = "body";
         public const string ClassAttribute = "class";
 
-        public static IEnumerable<Url> GetLinks(string html, Url url)
+        public static IEnumerable<Url> GetAllLinks(string html, Url url)
         {
             if (html.IsEmpty()) return Enumerable.Empty<Url>();
-            return GetHrefValues(html)
-                .Select(url.LinkTo)
-                .Where(x => x.Domain == url.Domain)
-                .Distinct();
-        }
 
-        public static IEnumerable<Url> GetLinks(string html, string url)
-        {
-            return GetLinks(html, new Url(url));
-        }
-
-        private static IEnumerable<string> GetHrefValues(string html)
-        {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
             return doc.DocumentNode
                 .SelectNodes("//a[@href]")
-                .Select(link => link.GetAttributeValue("href", ""))
-                .Distinct();
+                ?.Select(link => link.GetAttributeValue("href", ""))
+                .Distinct()
+                .Select(url.LinkTo)
+                .Distinct() ?? Enumerable.Empty<Url>();
+        }
+
+        public static IEnumerable<Url> GetAllLinks(string html, string url)
+        {
+            return GetAllLinks(html, Url.Create(url));
         }
 
         public static bool ConaintsDescendants(this HtmlNode node, string tag)

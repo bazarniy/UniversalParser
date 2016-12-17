@@ -50,6 +50,12 @@
             return index >= 0 ? data.Substring(index + text.Length) : data;
         }
 
+        public static string RemoveLastSegment(this string path, string delimeter)
+        {
+            var indexDelimeter = path.LastIndexOf(delimeter, StringComparison.Ordinal);
+            return indexDelimeter >= 0 ? path.Substring(0, indexDelimeter) : path;
+        }
+
         public static bool IsEmpty(this string url)
         {
             return string.IsNullOrWhiteSpace(url);

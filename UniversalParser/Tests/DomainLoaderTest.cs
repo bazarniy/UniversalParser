@@ -53,7 +53,7 @@ namespace Tests
 
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download());
-            _client.Received(1).Download(Arg.Is(new Url(TestDomain)));
+            _client.Received(1).Download(Arg.Is(Url.Create(TestDomain)));
         }
 
 
@@ -84,10 +84,10 @@ namespace Tests
         [Test]
         public void DownloadAnyException()
         {
-            var links = new List<Url> { new Url(TestDomain) };
+            var links = new List<Url> { Url.Create(TestDomain) };
             for (var i = 0; i < 100; i++)
             {
-                links.Add(new Url(TestDomain + i));
+                links.Add(Url.Create(TestDomain + i));
             }
 
             _client.Download(Arg.Any<Url>()).Throws(new ApplicationException("test"));

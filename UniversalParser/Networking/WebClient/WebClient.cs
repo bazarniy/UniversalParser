@@ -27,7 +27,7 @@
             }
 
             result.Data = Encoding
-                .GetEncoding(GetCharset())
+                .GetEncoding(GetCharset() ?? Encoding.UTF8.WebName)
                 .GetString(rawdata);
 
             return result;

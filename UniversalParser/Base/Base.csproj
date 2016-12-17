@@ -52,6 +52,7 @@
     <Compile Include="Helpers\HtmlHelpers.cs" />
     <Compile Include="Helpers\ConcurrentBagExtentions.cs" />
     <Compile Include="Helpers\StringExtentions.cs" />
+    <Compile Include="Helpers\UrlExtentions.cs" />
     <Compile Include="IDataReader.cs" />
     <Compile Include="IDataWriter.cs" />
     <Compile Include="ISiteStorage.cs" />

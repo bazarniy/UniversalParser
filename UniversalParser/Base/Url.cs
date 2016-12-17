@@ -20,36 +20,32 @@
         private const string ProtocolDelimeter = "://";
         private const string DomainPattern = @"https?:\/\/([\w\d-]*\.)?[\w\d-]*\.[\w]*";
         private static readonly Regex _domainRegex = new Regex(DomainPattern, RegexOptions.Compiled);
-        private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz" };
+        private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz", ".docx", ".dwg" };
         private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:", "skype:", "fax:", "modem:" };
 
         public string Domain { get; private set; }
-        public string Path { get; private set; }
+        public string Path { get; internal set; }
 
         private IEnumerable<string> _params;
 
         public string Params => string.Join(ParamsDelimeterString, _params.OrderBy(s => s));
 
-        public Url(string url, string domain = "")
+        public static Url Create(string url, string domain = "")
         {
             if (domain.IsEmpty()) url.ThrowIfEmpty(nameof(url));
 
             url = DecodeUrl(url);
 
-            Domain = ParseDomain(url) ?? ParseDomain(domain);
-            Domain.ThrowIfEmpty(nameof(Domain), "invalid domain");
+            var result = new Url {Domain = ParseDomain(url) ?? ParseDomain(domain)};
+            result.Domain.ThrowIfEmpty(nameof(Domain), "invalid domain");
 
-            Path = GetPath(url, Domain);
-            while (IsMailtoError(Path))
-            {
-                Path = RemoveLastSegment(Path);
-            }
+            result.Path = GetPath(url, result.Domain);
+            if (!result.Path.IsEmpty() && !result.Path.StartsWith(PathDelimeterString)) result.Path = PathDelimeterString + result.Path;
 
-            _params = GetParams(url);
-        }
+            if (!IsContent(result.Path)) return null;
 
-        private Url()
-        {
+            result._params = GetParams(url);
+            return result;
         }
 
         private static string GetPath(string url, string domain)
@@ -57,12 +53,8 @@
             var result = url.RemoveRight(PathAnchorDelimeterChar)
                 .RemoveRight(PathParamsDelimeterChar)
                 .RemoveFirst(domain);
-            while (result.EndsWith("//"))
-            {
-                result = result.Substring(0, result.Length - 1);
-            }
-            result = FixPathParent(result);
-            return result;
+
+            return ResolvePathParent(result);
         }
 
         private static IEnumerable<string> GetParams(string url)
@@ -70,7 +62,6 @@
             return url.Contains(PathParamsDelimeterChar)
                 ? url.RemoveRight(PathAnchorDelimeterChar)
                     .RemoveLeft(PathParamsDelimeterChar)
-                    .RemoveRight(PathParamsDelimeterChar) //?dsfgd=12/?sdf=df => dsfgd=12
                     .Split(new[] {ParamsDelimeterChar}, StringSplitOptions.RemoveEmptyEntries)
                 : Enumerable.Empty<string>();
         }
@@ -79,10 +70,11 @@
         {
             url = DecodeUrl(url);
 
-            if (url.IsEmpty() || !IsContent(url)) return this;
-            if (ParseDomain(url) != null) return new Url(url);
-            if (url.Contains(ProtocolDelimeter)) return this; //invalid domain like http://testxom
-            if (url.StartsWith(PathDelimeterString)) return new Url(url, Domain);
+            if (url.IsEmpty()) return this;
+            if (!IsContent(url)) return null;
+            if (ParseDomain(url) != null) return Create(url);
+            if (url.Contains(ProtocolDelimeter)) return null;
+            if (url.StartsWith(PathDelimeterString)) return Create(url, Domain);
 
             var result = new Url
             {
@@ -91,19 +83,7 @@
                 _params = GetParams(url)
             };
 
-            if (IsMailtoError(result.Path)) return this;
-
-            var path = Path;
-
-            if (result.Path != PathDelimeterString && !result.Path.IsEmpty())
-            {
-                if (!path.EndsWith("/"))
-                {
-                    path = RemoveLastSegment(path);
-                }
-                path = path + result.Path;
-            }
-            result.Path = path;
+            result.Path = PathConcat(Path, result.Path);
 
             return result;
         }
@@ -132,7 +112,7 @@
 
         private static bool IsContent(string url)
         {
-            return !url.StartsWith(_nonPageSubstringStarts) 
+            return !url.Contains(_nonPageSubstringStarts) 
                 && !url.EndsWith(_nonPageSubstrings) 
                 && !url.Contains(_nonPageSubstrings.Select(x => x + PathParamsDelimeterString));
         }
@@ -143,12 +123,7 @@
             return domain.IsEmpty() ? null : domain;
         }
 
-        private static bool IsMailtoError(string path)
-        {
-            return path.Contains("mailto") && path.Contains("@");
-        }
-
-        private static string FixPathParent(string path)
+        private static string ResolvePathParent(string path)
         {
             if (path.Contains("/./") || path.EndsWith("/."))
             {
@@ -172,18 +147,23 @@
             }
             while (path.EndsWith("/.."))
             {
-                path = path.Substring(0, path.Length - 3);
-                var index = path.LastIndexOf("/", StringComparison.Ordinal);
-                path = index >= 0 ? path.Substring(0, index) : path;
+                path = path.Substring(0, path.Length - 3).RemoveLastSegment("/");
             }
 
             return path;
         }
 
-        private static string RemoveLastSegment(string path)
+        private static string PathConcat(string path1, string path2)
         {
-            var indexDelimeter = path.LastIndexOf("/", StringComparison.Ordinal);
-            return indexDelimeter >= 0 ? path.Substring(0, indexDelimeter + 1) : "";
+            if (path2 == PathDelimeterString || path2.IsEmpty()) return path1;
+
+            if (!path1.EndsWith("/")) path1 = path1.RemoveLastSegment("/") + "/";
+
+            return path1 + path2;
         }
+
+
+
+
     }
 }

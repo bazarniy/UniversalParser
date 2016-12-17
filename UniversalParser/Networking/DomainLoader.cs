@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Networking
+﻿namespace Networking
 {
+    using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
     using Base;
     using Base.Helpers;
     using Base.Utilities;
@@ -20,13 +18,12 @@ namespace Networking
         private readonly Url _domain;
         private readonly ConcurrentQueue<Url> _queue = new ConcurrentQueue<Url>();
         private readonly Dictionary<Url, Task<Exception>> _allTasks = new Dictionary<Url, Task<Exception>>();
-        private readonly ConcurrentBag<string> _parsed = new ConcurrentBag<string>();
 
         public DomainLoader(IWebClientFactory client, IDataWriter writer, string domain)
         {
             client.ThrowIfNull(nameof(client));
             writer.ThrowIfNull(nameof(writer));
-            _domain = new Url(domain);
+            _domain = Url.Create(domain);
 
             _client = client;
             _writer = writer;
@@ -66,11 +63,11 @@ namespace Networking
                     using (var client = _client.Create())
                     {
                         var result = await client.Download(link).ConfigureAwait(false);
-                        if (result.Links.Any(x => x.ToString().Contains("products/catalog/index.php")))
-                        {
-                            Console.WriteLine(result.Url);
-                        }
-                        _queue.AddRange(result.Links);
+                        _queue.AddRange(
+                            result.Links
+                                .Select(x => x.Fix())
+                                .Where(x => x != null && x.Domain == _domain.Domain)
+                        );
                         _writer.Write(result);
                         return null;
                     }

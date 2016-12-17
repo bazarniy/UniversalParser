@@ -10,7 +10,7 @@
         public readonly string Url;
         public int Code;
         public string Data;
-        public IEnumerable<Url> Links => HtmlHelpers.GetLinks(Data, Url);
+        public IEnumerable<Url> Links => HtmlHelpers.GetAllLinks(Data, Url);
 
         public DataInfo(string url)
         {
