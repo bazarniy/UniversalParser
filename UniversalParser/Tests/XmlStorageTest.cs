@@ -92,7 +92,7 @@
         public void ReadFileArgs()
         {
             var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
-            Assert.Throws<ArgumentException>(() => storage.ReadByFilename<DataInfo>(""));
+            Assert.Throws<ArgumentException>(() => storage.Read<DataInfo>(""));
         }
 
         [Test]
@@ -103,8 +103,8 @@
             _driver.Read(Arg.Any<string>()).Returns(x => Stream.Null);
 
             var storage = new XmlStorage(_driver, _index);
-            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
-            Assert.IsNull(storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.DoesNotThrow(() => storage.Read<DataInfo>(TestFileName));
+            Assert.IsNull(storage.Read<DataInfo>(TestFileName));
 
             _driver.Received(2).Read(Arg.Is(TestFileName));
         }
@@ -113,7 +113,7 @@
         public void ReadFileNotIndexed()
         {
             var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
-            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.DoesNotThrow(() => storage.Read<DataInfo>(TestFileName));
             _driver.DidNotReceive().Read(Arg.Is(TestFileName));
         }
 
@@ -130,8 +130,8 @@
             _index.Get(Arg.Is<StorageItem>(item => item.FileName == TestFileName)).Returns(new StorageItem() {FileName = TestFileName});
             _driver.Read(Arg.Is(TestFileName)).Returns(ux => File.OpenRead(TestFileName));
 
-            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
-            Assert.IsNotNull(storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.DoesNotThrow(() => storage.Read<DataInfo>(TestFileName));
+            Assert.IsNotNull(storage.Read<DataInfo>(TestFileName));
 
             _driver.Received(2).Read(Arg.Is(TestFileName));
         }
@@ -145,7 +145,7 @@
 
 
             var storage = new XmlStorage(_driver, _index);
-            Assert.Throws<SerializationException>(() => storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.Throws<SerializationException>(() => storage.Read<DataInfo>(TestFileName));
         }
 
         [Test]
@@ -154,6 +154,17 @@
             Assert.Throws<ArgumentException>(() => XmlStorage.GetStorage("", "ext"));
             Assert.DoesNotThrow(() => XmlStorage.GetStorage("testpath", "ext"));
             Assert.NotNull(XmlStorage.GetStorage("testpath", "ext"));
+        }
+
+        [Test]
+        public void Enum()
+        {
+            var storage = new XmlStorage(_driver, _index);
+            Assert.DoesNotThrow(() => storage.Enum());
+            Assert.IsEmpty(storage.Enum());
+
+            _index.Items.Returns(new[] {new StorageItem() {Url = "test1"}, new StorageItem() {Url = "test2"}});
+            Assert.IsNotEmpty(storage.Enum());
         }
     }
 }

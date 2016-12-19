@@ -1,5 +1,6 @@
 ﻿namespace XmlStorage
 {
+    using System.Collections.Generic;
     using System.Linq;
     using Base;
     using Base.Serializers;
@@ -52,16 +53,10 @@
             return _index.Count();
         }
 
-        public T ReadByFilename<T>(string fileName) where T : class
+        public T Read<T>(string fileName) where T : class
         {
             fileName.ThrowIfEmpty(nameof(fileName));
             return Read<T>(new StorageItem { FileName = fileName });
-        }
-
-        public T ReadByUrl<T>(string url) where T : class
-        {
-            url.ThrowIfEmpty(nameof(url));
-            return Read<T>(new StorageItem {Url = url});
         }
 
         private T Read<T>(StorageItem item) where T : class
@@ -72,6 +67,11 @@
                 return BinarySerealizer.Load<T>(_driver.Read(item.FileName));
             }
             return null;
+        }
+
+        public IEnumerable<string> Enum()
+        {
+            return _index.Items.Select(x => x.Url);
         }
 
         public static XmlStorage GetStorage(string path, string extention)

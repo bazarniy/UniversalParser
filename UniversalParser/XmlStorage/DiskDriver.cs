@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using Base.Utilities;
 
     public class DiskDriver : IStorageDriver
@@ -38,13 +39,13 @@
 
         public Stream Read(string name)
         {
-            var path = GetValidatedName(name);
+            var path = GetValidatedPath(name);
             return !File.Exists(path) ? Stream.Null : File.OpenRead(path);
         }
 
         public IEnumerable<string> Enum()
         {
-            return Directory.EnumerateFiles(_basePath);
+            return Directory.EnumerateFiles(_basePath).Select(x=>x.Substring(_basePath.Length+1));
         }
 
         public void Remove(string name)

@@ -26,7 +26,7 @@ namespace ConsoleApplication1
             var task = loader.Download();
             task.Wait();
             var results = loader.GetResults();
-            File.WriteAllLines("result.txt", results.Select(x=>$"{x.Key} - {x.Value?.ToString()}"));
+            File.WriteAllLines("result.txt", results.Where(x=>x.Value!=null).Select(x=>$"{x.Key} - {x.Value?.ToString()}"));
         }
     }
 
