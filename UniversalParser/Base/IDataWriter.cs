@@ -2,6 +2,6 @@
 {
     public interface IDataWriter
     {
-        void Write(DataInfo info);
+        void Write<T>(T info, string url) where T : class;
     }
 }

@@ -24,7 +24,7 @@
         private void ClearFilesAndIndex()
         {
             var files = _driver.Enum().ToArray();
-            foreach (var file in files.Where(x => !_index.Exists(x)))
+            foreach (var file in files.Where(x => _index.Get(new StorageItem {FileName = x}) == null))
             {
                 _driver.Remove(file);
             }
@@ -35,14 +35,15 @@
             }
         }
 
-        public void Write(DataInfo info)
+        public void Write<T>(T info, string url) where T: class
         {
             info.ThrowIfNull(nameof(info));
+            url.ThrowIfEmpty(nameof(url));
 
             var name = _driver.GetRandomName();
             BinarySerealizer.Save(info, _driver.Write(name));
 
-            _index.Add(new StorageItem {FileName = name, Url = info.Url});
+            _index.Add(new StorageItem {FileName = name, Url = url});
         }
 
 
@@ -51,12 +52,24 @@
             return _index.Count();
         }
 
-        public DataInfo GetFile(string fileName)
+        public T ReadByFilename<T>(string fileName) where T : class
         {
             fileName.ThrowIfEmpty(nameof(fileName));
-            if (_index.Exists(fileName) && _driver.Exists(fileName))
+            return Read<T>(new StorageItem { FileName = fileName });
+        }
+
+        public T ReadByUrl<T>(string url) where T : class
+        {
+            url.ThrowIfEmpty(nameof(url));
+            return Read<T>(new StorageItem {Url = url});
+        }
+
+        private T Read<T>(StorageItem item) where T : class
+        {
+            item = _index.Get(item);
+            if (item != null && _driver.Exists(item.FileName))
             {
-                return BinarySerealizer.Load<DataInfo>(_driver.Read(fileName));
+                return BinarySerealizer.Load<T>(_driver.Read(item.FileName));
             }
             return null;
         }

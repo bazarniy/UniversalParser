@@ -61,11 +61,12 @@
         public void WriteData()
         {
             var storage = new XmlStorage(_driver, _index);
-            Assert.Throws<ArgumentNullException>(() => storage.Write(null));
+            Assert.Throws<ArgumentNullException>(() => storage.Write<DataInfo>(null, "as"));
+            Assert.Throws<ArgumentException>(() => storage.Write<DataInfo>(_info, ""));
 
             _driver.GetRandomName().Returns(TestFileName);
             _driver.Write(Arg.Any<string>()).Returns(x => new MemoryStream());
-            Assert.DoesNotThrow(() => storage.Write(_info));
+            Assert.DoesNotThrow(() => storage.Write(_info, _info.Url));
 
             _driver.Received(1).Write(Arg.Is(TestFileName));
             _index.Received(1).Add(Arg.Any<StorageItem>());
@@ -82,7 +83,7 @@
             Assert.DoesNotThrow(() => storage.Count());
             Assert.AreEqual(0, storage.Count());
 
-            storage.Write(_info);
+            storage.Write(_info, _info.Url);
 
             Assert.AreEqual(1, storage.Count());
         }
@@ -91,19 +92,19 @@
         public void ReadFileArgs()
         {
             var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
-            Assert.Throws<ArgumentException>(() => storage.GetFile(""));
+            Assert.Throws<ArgumentException>(() => storage.ReadByFilename<DataInfo>(""));
         }
 
         [Test]
         public void ReadFileNotExist()
         {
-            _index.Exists(Arg.Is(TestFileName)).Returns(true);
+            _index.Get(Arg.Any<StorageItem>()).Returns(new StorageItem() {FileName = TestFileName});
             _driver.Exists(Arg.Is(TestFileName)).Returns(true);
             _driver.Read(Arg.Any<string>()).Returns(x => Stream.Null);
 
             var storage = new XmlStorage(_driver, _index);
-            Assert.DoesNotThrow(() => storage.GetFile(TestFileName));
-            Assert.IsNull(storage.GetFile(TestFileName));
+            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.IsNull(storage.ReadByFilename<DataInfo>(TestFileName));
 
             _driver.Received(2).Read(Arg.Is(TestFileName));
         }
@@ -112,7 +113,7 @@
         public void ReadFileNotIndexed()
         {
             var storage = new XmlStorage(_driver, new XmlStorageIndex(_driver));
-            Assert.DoesNotThrow(() => storage.GetFile(TestFileName));
+            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
             _driver.DidNotReceive().Read(Arg.Is(TestFileName));
         }
 
@@ -123,14 +124,14 @@
             _driver.Write(Arg.Is(TestFileName)).Returns(ux => File.Create(TestFileName));
 
             var storage = new XmlStorage(_driver, _index);
-            storage.Write(_info);
+            storage.Write(_info, _info.Url);
 
             _driver.Exists(Arg.Is(TestFileName)).Returns(true);
-            _index.Exists(Arg.Is(TestFileName)).Returns(true);
+            _index.Get(Arg.Is<StorageItem>(item => item.FileName == TestFileName)).Returns(new StorageItem() {FileName = TestFileName});
             _driver.Read(Arg.Is(TestFileName)).Returns(ux => File.OpenRead(TestFileName));
 
-            Assert.DoesNotThrow(() => storage.GetFile(TestFileName));
-            Assert.IsNotNull(storage.GetFile(TestFileName));
+            Assert.DoesNotThrow(() => storage.ReadByFilename<DataInfo>(TestFileName));
+            Assert.IsNotNull(storage.ReadByFilename<DataInfo>(TestFileName));
 
             _driver.Received(2).Read(Arg.Is(TestFileName));
         }
@@ -138,13 +139,13 @@
         [Test]
         public void ReadFileCorrupted()
         {
-            _index.Exists(Arg.Is(TestFileName)).Returns(true);
+            _index.Get(Arg.Is<StorageItem>(item => item.FileName == TestFileName)).Returns(new StorageItem() { FileName = TestFileName });
             _driver.Exists(Arg.Is(TestFileName)).Returns(true);
             _driver.Read(Arg.Any<string>()).Returns(x => new MemoryStream());
 
 
             var storage = new XmlStorage(_driver, _index);
-            Assert.Throws<SerializationException>(() => storage.GetFile(TestFileName));
+            Assert.Throws<SerializationException>(() => storage.ReadByFilename<DataInfo>(TestFileName));
         }
 
         [Test]

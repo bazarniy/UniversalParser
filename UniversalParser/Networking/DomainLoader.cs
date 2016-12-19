@@ -68,7 +68,7 @@
                                 .Select(x => x.Fix())
                                 .Where(x => x != null && x.Domain == _domain.Domain)
                         );
-                        _writer.Write(result);
+                        _writer.Write(result, result.Url);
                         return null;
                     }
                 }

@@ -109,12 +109,16 @@
         public void Exists()
         {
             var filename = "testFilename";
+            var item = new StorageItem() {FileName = filename, Url = "testurl"};
             var ind = new XmlStorageIndex(_driver);
-            Assert.Throws<ArgumentException>(() => ind.Exists(""));
-            Assert.DoesNotThrow(() => ind.Exists(filename));
-            Assert.IsFalse(ind.Exists(filename));
+            Assert.Throws<ArgumentNullException>(() => ind.Get(null));
+            Assert.Throws<ArgumentException>(() => ind.Get(new StorageItem()));
+            Assert.DoesNotThrow(() => ind.Get(item));
+            Assert.IsFalse(ind.Get(item) != null);
             ind.Add(new StorageItem {FileName = filename});
-            Assert.IsTrue(ind.Exists(filename));
+            Assert.IsTrue(ind.Get(item) != null);
+            ind.Add(new StorageItem {Url = "testurl"});
+            Assert.IsTrue(ind.Get(item) != null);
         }
 
         [Test]

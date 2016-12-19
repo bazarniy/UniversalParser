@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Xml.Serialization;
+    using Base.Helpers;
     using Base.Serializers;
     using Base.Utilities;
 
@@ -13,7 +14,7 @@
         int Count();
         void Add(StorageItem item);
         void Remove(StorageItem item);
-        bool Exists(string filename);
+        StorageItem Get(StorageItem item);
         IEnumerable<StorageItem> Items { get; }
     }
 
@@ -83,10 +84,11 @@
             }
         }
 
-        public bool Exists(string filename)
+        public StorageItem Get(StorageItem item)
         {
-            filename.ThrowIfEmpty(nameof(filename));
-            lock (_latch) return _items.Items.Any(x => x.FileName == filename);
+            item.ThrowIfNull(nameof(item));
+            if (item.FileName.IsEmpty() && item.Url.IsEmpty()) throw new ArgumentException("Item params are empty", nameof(item));
+            lock (_latch) return _items.Items.FirstOrDefault(x => x.FileName == item.FileName || x.Url == item.Url);
         }
     }
 
