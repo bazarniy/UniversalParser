@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DomainLoaderTest.cs" />
+    <Compile Include="HtmlSimplifierTest.cs" />
     <Compile Include="NormalizedTableTest.cs" />
     <Compile Include="PathValidatorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
