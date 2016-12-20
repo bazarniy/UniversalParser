@@ -47,6 +47,11 @@
             _driver.Remove(GetNameWithExtention(name));
         }
 
+        public long GetLength(string name)
+        {
+            return _driver.GetLength(GetNameWithExtention(name));
+        }
+
         public IEnumerable<string> Enum()
         {
             return _driver.Enum().Where(EndsWithExtention);

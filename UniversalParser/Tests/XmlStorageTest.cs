@@ -1,7 +1,9 @@
 ﻿namespace Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Runtime.Serialization;
     using Base;
     using NSubstitute;
@@ -165,6 +167,31 @@
 
             _index.Items.Returns(new[] {new StorageItem() {Url = "test1"}, new StorageItem() {Url = "test2"}});
             Assert.IsNotEmpty(storage.Enum());
+        }
+
+        [Test]
+        public void Deduplication()
+        {
+            _driver.Write(Arg.Any<string>()).Returns(x=>new MemoryStream());
+
+            var index = new XmlStorageIndex(_driver);
+
+            _driver.Exists(Arg.Any<string>()).Returns(true);
+            _driver.GetLength(Arg.Is("f1")).Returns(3);
+            _driver.GetLength(Arg.Is("f3")).Returns(3);
+            _driver.Read(Arg.Is("f1")).Returns(new MemoryStream(new byte[] {1, 2, 3}));
+            _driver.Read(Arg.Is("f3")).Returns(new MemoryStream(new byte[] {1, 2, 3}));
+
+            var storage=new XmlStorage(_driver, index);
+
+            index.Add(new StorageItem { FileName = "f1", Url = "url1" });
+            index.Add(new StorageItem { FileName = "f2", Url = "url2" });
+            index.Add(new StorageItem { FileName = "f3", Url = "url3" });
+            storage.Deduplication();
+
+            Assert.IsTrue(index.Items.Any(x => x.FileName == "f2"));
+            Assert.IsTrue(index.Items.Count(x => x.FileName == "f1") == 2 || index.Items.Count(x => x.FileName == "f3") == 2);
+
         }
     }
 }

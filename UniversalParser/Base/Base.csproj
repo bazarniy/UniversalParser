@@ -61,6 +61,7 @@
     <Compile Include="Serializers\XmlClassSerializer.cs" />
     <Compile Include="Url.cs" />
     <Compile Include="Utilities\CloneUtility.cs" />
+    <Compile Include="Utilities\FileStreamEquas.cs" />
     <Compile Include="Utilities\Guard.cs" />
     <Compile Include="Utilities\PathValidator.cs" />
   </ItemGroup>

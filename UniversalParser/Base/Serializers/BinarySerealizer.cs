@@ -2,6 +2,8 @@
 {
     using System.IO;
     using System.Runtime.Serialization.Formatters.Binary;
+    using System.Text;
+    using Helpers;
 
     public static class BinarySerealizer
     {
@@ -29,20 +31,43 @@
 
         public static void Save<T>(T source, Stream stream) where T : class
         {
-            var binaryFormatter = new BinaryFormatter();
-            binaryFormatter.Serialize(stream, source);
-            stream.Close();
+            if (typeof(T) == typeof(string))
+            {
+                var data = source as string;
+                if (data.IsEmpty()) return;
+
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+                    writer.Write(data);
+                }
+            }
+            else
+            {
+                var binaryFormatter = new BinaryFormatter();
+                binaryFormatter.Serialize(stream, source);
+                stream.Close();
+            }
         }
 
         public static T Load<T>(Stream stream) where T : class
         {
             if (stream == Stream.Null) return null;
 
-            var formatter = new BinaryFormatter();
-            stream.Seek(0, SeekOrigin.Begin);
-            var source = formatter.Deserialize(stream);
-            stream.Close();
-            return source as T;
+            if (typeof(T) == typeof(string))
+            {
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    return reader.ReadToEnd() as T;
+                }
+            }
+            else
+            {
+                var formatter = new BinaryFormatter();
+                stream.Seek(0, SeekOrigin.Begin);
+                var source = formatter.Deserialize(stream);
+                stream.Close();
+                return source as T;
+            }
         }
     }
 }

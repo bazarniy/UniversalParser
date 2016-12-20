@@ -11,5 +11,6 @@
         Stream Read(string name);
         IEnumerable<string> Enum();
         void Remove(string name);
+        long GetLength(string name);
     }
 }

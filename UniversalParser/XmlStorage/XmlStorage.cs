@@ -81,5 +81,27 @@
             var driver = new DiskDriver(path);
             return new XmlStorage(new StorageDriverFacade(extention, driver), new XmlStorageIndex(new StorageDriverFacade("xml", driver)));
         }
+
+        public void Deduplication()
+        {
+            foreach (var item in _index.Items)
+            {
+                if (!_driver.Exists(item.FileName)) continue;
+
+                var length = _driver.GetLength(item.FileName);
+                foreach (var item2 in _index.Items.Where(x => x.FileName != item.FileName).ToArray())
+                {
+                    if (_driver.GetLength(item2.FileName) == length &&
+                        _driver.Exists(item2.FileName) &&
+                        FileStreamEquals.Equals(_driver.Read(item.FileName), _driver.Read(item2.FileName)))
+                    {
+                        _driver.Remove(item2.FileName);
+                        item2.FileName = item.FileName;
+                    }
+                }
+            }
+        }
+
+
     }
 }

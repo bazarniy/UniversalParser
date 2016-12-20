@@ -51,6 +51,7 @@
                     await Task.WhenAll(_allTasks.Values);
                 }
             }
+            _writer.Deduplication();
         }
 
         private Task<Exception> GetLink(Url link, SemaphoreSlim semaphore)
@@ -68,6 +69,7 @@
                                 .Select(x => x.Fix())
                                 .Where(x => x != null && x.Domain == _domain.Domain)
                         );
+                        if (result.Data.IsEmpty()) throw new ApplicationException($"Empty data. Page {result.Url}. Code {result.Code}");
                         _writer.Write(result.Data, result.Url);
                         return null;
                     }

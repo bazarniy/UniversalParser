@@ -222,5 +222,17 @@ namespace Tests
             File.WriteAllText(Path.Combine(_storagePath, file), "");
             Assert.DoesNotThrow(() => d.Read(file).Close());
         }
+
+        [Test]
+        public void GetLength()
+        {
+            var d = _driver;
+            const string file = "testfile.xxx";
+
+            File.WriteAllText(Path.Combine(_storagePath, file), "123");
+
+            Assert.IsTrue(d.GetLength(file) == 3);
+            Assert.IsTrue(d.GetLength("ololo") == 0);
+        }
     }
 }

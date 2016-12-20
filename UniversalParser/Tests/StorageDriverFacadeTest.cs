@@ -91,11 +91,13 @@
             driver.Read(name);
             driver.Remove(name);
             driver.Write(name);
+            driver.GetLength(name);
 
             _baseDriver.Received(1).Exists(Arg.Is<string>(x => CheckResultName(x, name, extention)));
             _baseDriver.Received(1).Read(Arg.Is<string>(x => CheckResultName(x, name, extention)));
             _baseDriver.Received(1).Remove(Arg.Is<string>(x => CheckResultName(x, name, extention)));
             _baseDriver.Received(1).Write(Arg.Is<string>(x => CheckResultName(x, name, extention)));
+            _baseDriver.Received(1).GetLength(Arg.Is<string>(x => CheckResultName(x, name, extention)));
         }
 
         private static bool CheckResultName(string name, string baseName, string extention)

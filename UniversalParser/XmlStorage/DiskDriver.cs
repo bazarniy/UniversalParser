@@ -53,6 +53,12 @@
             File.Delete(GetValidatedPath(name));
         }
 
+        public long GetLength(string name)
+        {
+            var path = GetValidatedPath(name);
+            return !File.Exists(path) ? 0 : new FileInfo(path).Length;
+        }
+
         private string GetValidatedPath(string path)
         {
             return GetPath(GetValidatedName(path));
