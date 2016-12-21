@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Base.Utilities
 {
+    using System.Text.RegularExpressions;
     using Helpers;
     using HtmlAgilityPack;
 
@@ -28,7 +29,7 @@ namespace Base.Utilities
                 scriptNode.Remove();
             }
 
-            foreach (var scriptNode in doc.DocumentNode.SelectNodesSafe("head//meta").ToArray())
+            foreach (var scriptNode in doc.DocumentNode.SelectNodesSafe("//meta").ToArray())
             {
                 if (!scriptNode.HasAttributeValueCaseInsensitive("name", new[] {"title", "keywords", "description"}))
                 {
@@ -47,8 +48,10 @@ namespace Base.Utilities
                 }
             }
 
-            return doc.DocumentNode.OuterHtml;
+            var result = Regex.Replace(doc.DocumentNode.OuterHtml, @"^\s+$[\r\n]*", "", RegexOptions.Multiline);
+            result = Regex.Replace(result, @"[\r\n]+", "\n", RegexOptions.Multiline);
 
+            return result;
         }
     }
 }

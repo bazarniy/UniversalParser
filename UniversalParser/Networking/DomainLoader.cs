@@ -16,6 +16,7 @@
         private readonly IWebClientFactory _client;
         private readonly IDataWriter _writer;
         private readonly Url _domain;
+        private readonly HtmlSimplifier _simplifier;
         private readonly ConcurrentQueue<Url> _queue = new ConcurrentQueue<Url>();
         private readonly Dictionary<Url, Task<Exception>> _allTasks = new Dictionary<Url, Task<Exception>>();
 
@@ -27,6 +28,7 @@
 
             _client = client;
             _writer = writer;
+            _simplifier = new HtmlSimplifier();
             _queue.Enqueue(_domain);
         }
 
@@ -51,7 +53,6 @@
                     await Task.WhenAll(_allTasks.Values);
                 }
             }
-            _writer.Deduplication();
         }
 
         private Task<Exception> GetLink(Url link, SemaphoreSlim semaphore)
@@ -64,13 +65,21 @@
                     using (var client = _client.Create())
                     {
                         var result = await client.Download(link).ConfigureAwait(false);
+                        if (!result.Data.IsEmpty() && !result.Data.ToLowerInvariant().Contains("<html") && !result.Data.ToLowerInvariant().Contains("</html"))
+                        {
+                            result.Data = "";
+                        }
                         _queue.AddRange(
                             result.Links
                                 .Select(x => x.Fix())
                                 .Where(x => x != null && x.Domain == _domain.Domain)
                         );
-                        if (result.Data.IsEmpty()) throw new ApplicationException($"Empty data. Page {result.Url}. Code {result.Code}");
-                        _writer.Write(result.Data, result.Url);
+                        if (result.Data.IsEmpty())
+                        {
+                            if (result.Code != 404) throw new ApplicationException($"Empty data. Page {result.Url}. Code {result.Code}");
+                            return null;
+                        }
+                        _writer.Write(_simplifier.Simplify(result.Data), result.Url);
                         return null;
                     }
                 }

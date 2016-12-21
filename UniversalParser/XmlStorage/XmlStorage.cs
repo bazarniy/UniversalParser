@@ -84,19 +84,72 @@
 
         public void Deduplication()
         {
+            long iterations = 0;
+            var changedItems = new List<int>();
+            var items = _index.Items
+                .Where(item => _driver.Exists(item.FileName))
+                .ToDictionary(item => item, item => _driver.GetLength(item.FileName));
+
+            var length = items.Count;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (changedItems.Contains(i)) continue;
+                var item1 = items.ElementAt(i);
+
+                using (var s1 = _driver.Read(item1.Key.FileName))
+                {
+                    for (int j = i + 1; j < length; j++)
+                    {
+                        iterations++;
+                        if (changedItems.Contains(j)) continue;
+
+                        var item2 = items.ElementAt(j);
+
+                        if (item1.Value != item2.Value) continue;
+
+                        using (var s2 = _driver.Read(item2.Key.FileName))
+                        {
+                            if (!FileStreamEquals.Equals(s1, s2)) continue;
+                        }
+
+                        _driver.Remove(item2.Key.FileName);
+                        item2.Key.FileName = item1.Key.FileName;
+                        _index.Save();
+
+                        changedItems.Add(j);
+                    }
+                }
+            }
+        }
+
+        public void Deduplication1()
+        {
+            long iterations = 0;
+            var changedFiles = new List<string>();
             foreach (var item in _index.Items)
             {
-                if (!_driver.Exists(item.FileName)) continue;
+                if (changedFiles.Contains(item.FileName) || !_driver.Exists(item.FileName)) continue;
 
                 var length = _driver.GetLength(item.FileName);
-                foreach (var item2 in _index.Items.Where(x => x.FileName != item.FileName).ToArray())
+                using (var s1 = _driver.Read(item.FileName))
                 {
-                    if (_driver.GetLength(item2.FileName) == length &&
-                        _driver.Exists(item2.FileName) &&
-                        FileStreamEquals.Equals(_driver.Read(item.FileName), _driver.Read(item2.FileName)))
+                    foreach (var item2 in _index.Items.Where(x => x.FileName != item.FileName))
                     {
-                        _driver.Remove(item2.FileName);
-                        item2.FileName = item.FileName;
+                        iterations++;
+                        if (!_driver.Exists(item2.FileName) || _driver.GetLength(item2.FileName) != length) continue;
+
+                        using (var s2 = _driver.Read(item2.FileName))
+                        {
+                            if (!FileStreamEquals.Equals(s1, s2)) continue;
+
+                            s2.Close();
+                            _driver.Remove(item2.FileName);
+                            item2.FileName = item.FileName;
+                            _index.Save();
+
+                            changedFiles.Add(item.FileName);
+                        }
                     }
                 }
             }

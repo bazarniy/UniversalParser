@@ -22,11 +22,12 @@ namespace ConsoleApplication1
         static void Main(string[] args)
         {
             var storage = XmlStorage.GetStorage("iekru", "dwl");
-            var loader = new DomainLoader(new WebClientFactory(), storage, "https://www.iek.ru");
+            /*var loader = new DomainLoader(new WebClientFactory(), storage, "https://www.iek.ru");
             var task = loader.Download();
             task.Wait();
             var results = loader.GetResults();
-            File.WriteAllLines("result.txt", results.Where(x=>x.Value!=null).Select(x=>$"{x.Key} - {x.Value?.ToString()}"));
+            File.WriteAllLines("result.txt", results.Where(x => x.Value != null).Select(x => $"{x.Key} - {x.Value?.ToString()}"));*/
+            storage.Deduplication();
         }
     }
 

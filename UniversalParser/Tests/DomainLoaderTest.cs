@@ -97,6 +97,24 @@ namespace Tests
         }
 
         [Test]
+        public void Download404()
+        {
+            _client.Download(Arg.Any<Url>()).Returns(new DataInfo(TestDomain) {Code = 404, Data = ""});
+            var x = GetNewDomainLoader;
+            Assert.DoesNotThrowAsync(() => x.Download(1));
+            Assert.IsNull(x.GetResults().First().Value);
+        }
+
+        [Test]
+        public void DownloadEmpty()
+        {
+            _client.Download(Arg.Any<Url>()).Returns(new DataInfo(TestDomain) { Code = 200, Data = "" });
+            var x = GetNewDomainLoader;
+            Assert.DoesNotThrowAsync(() => x.Download(1));
+            Assert.NotNull(x.GetResults().First().Value);
+        }
+
+        [Test]
         public void DownloadGetErrorResults()
         {
             Assert.DoesNotThrow(() => GetNewDomainLoader.GetResults());

@@ -20,7 +20,7 @@
         private const string ProtocolDelimeter = "://";
         private const string DomainPattern = @"https?:\/\/([\w\d-]*\.)?[\w\d-]*\.[\w]*";
         private static readonly Regex _domainRegex = new Regex(DomainPattern, RegexOptions.Compiled);
-        private static readonly string[] _nonPageSubstrings = { ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz", ".docx", ".dwg" };
+        private static readonly string[] _nonPageSubstrings = { ".exe", ".jpg", ".jpeg", ".gif", ".png", ".pdf", ".xls", ".xlsx", ".xlsm", ".rtf", ".zip", ".rar", ".7z", ".gz", ".bz", ".docx", ".dwg" };
         private static readonly string[] _nonPageSubstringStarts = { "mailto:", "javascript:", "tel:", "skype:", "fax:", "modem:" };
 
         public string Domain { get; private set; }

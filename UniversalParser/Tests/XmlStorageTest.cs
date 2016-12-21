@@ -179,8 +179,10 @@
             _driver.Exists(Arg.Any<string>()).Returns(true);
             _driver.GetLength(Arg.Is("f1")).Returns(3);
             _driver.GetLength(Arg.Is("f3")).Returns(3);
-            _driver.Read(Arg.Is("f1")).Returns(new MemoryStream(new byte[] {1, 2, 3}));
-            _driver.Read(Arg.Is("f3")).Returns(new MemoryStream(new byte[] {1, 2, 3}));
+            var str1 = new MemoryStream(new byte[] {1, 2, 3});
+            var str2 = new MemoryStream(new byte[] {1, 2, 3});
+            _driver.Read(Arg.Is("f1")).Returns(str1);
+            _driver.Read(Arg.Is("f3")).Returns(str2);
 
             var storage=new XmlStorage(_driver, index);
 
