@@ -84,7 +84,6 @@
 
         public void Deduplication()
         {
-            long iterations = 0;
             var changedItems = new List<int>();
             var items = _index.Items
                 .Where(item => _driver.Exists(item.FileName))
@@ -101,7 +100,6 @@
                 {
                     for (int j = i + 1; j < length; j++)
                     {
-                        iterations++;
                         if (changedItems.Contains(j)) continue;
 
                         var item2 = items.ElementAt(j);
@@ -123,39 +121,5 @@
             }
             _index.Save();
         }
-
-        public void Deduplication1()
-        {
-            long iterations = 0;
-            var changedFiles = new List<string>();
-            foreach (var item in _index.Items)
-            {
-                if (changedFiles.Contains(item.FileName) || !_driver.Exists(item.FileName)) continue;
-
-                var length = _driver.GetLength(item.FileName);
-                using (var s1 = _driver.Read(item.FileName))
-                {
-                    foreach (var item2 in _index.Items.Where(x => x.FileName != item.FileName))
-                    {
-                        iterations++;
-                        if (!_driver.Exists(item2.FileName) || _driver.GetLength(item2.FileName) != length) continue;
-
-                        using (var s2 = _driver.Read(item2.FileName))
-                        {
-                            if (!FileStreamEquals.Equals(s1, s2)) continue;
-
-                            s2.Close();
-                            _driver.Remove(item2.FileName);
-                            item2.FileName = item.FileName;
-                            _index.Save();
-
-                            changedFiles.Add(item.FileName);
-                        }
-                    }
-                }
-            }
-        }
-
-
     }
 }
