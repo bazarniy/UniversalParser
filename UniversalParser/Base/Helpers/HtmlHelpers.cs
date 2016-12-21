@@ -18,11 +18,11 @@
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
             return doc.DocumentNode
-                .SelectNodes("//a[@href]")
-                ?.Select(link => link.GetAttributeValue("href", ""))
+                .SelectNodesSafe("//a[@href]")
+                .Select(link => link.GetAttributeValue("href", ""))
                 .Distinct()
                 .Select(url.LinkTo)
-                .Distinct() ?? Enumerable.Empty<Url>();
+                .Distinct();
         }
 
         public static IEnumerable<Url> GetAllLinks(string html, string url)
@@ -61,9 +61,18 @@
             return node.HasAttribute(attributeName) && node.Attributes[attributeName].Value == value;
         }
 
+        public static bool HasAttributeValueCaseInsensitive(this HtmlNode node, string attributeName, string value)
+        {
+            return node.HasAttribute(attributeName) && node.Attributes[attributeName].Value.ToUpperInvariant() == value.ToUpperInvariant();
+        }
+
         public static bool HasAttributeValue(this HtmlNode node, string attributeName, IEnumerable<string> value)
         {
             return node.HasAttribute(attributeName) && value.Any(x => x == node.Attributes[attributeName].Value);
+        }
+        public static bool HasAttributeValueCaseInsensitive(this HtmlNode node, string attributeName, IEnumerable<string> value)
+        {
+            return node.HasAttribute(attributeName) && value.Any(x => x.ToUpperInvariant() == node.Attributes[attributeName].Value.ToUpperInvariant());
         }
 
         public static bool HasClassValue(this HtmlNode node, string value)
