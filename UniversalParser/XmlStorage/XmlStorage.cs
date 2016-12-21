@@ -115,12 +115,13 @@
 
                         _driver.Remove(item2.Key.FileName);
                         item2.Key.FileName = item1.Key.FileName;
-                        _index.Save();
-
+                        
                         changedItems.Add(j);
                     }
                 }
+                _index.Save();
             }
+            _index.Save();
         }
 
         public void Deduplication1()

@@ -7,9 +7,18 @@
     {
         public static bool Equals(Stream stream1, Stream stream2)
         {
+            if (stream1 == Stream.Null && stream2 == Stream.Null) return true;
+            if (stream1 == null && stream2 == null) return true;
+            if (stream1 == Stream.Null || stream2 == Stream.Null) return false;
+            if (stream1 == null || stream2 == null) return false;
+
             const int bufferSize = 2048;
             byte[] buffer1 = new byte[bufferSize]; //buffer size
             byte[] buffer2 = new byte[bufferSize];
+
+            stream1.Position = 0;
+            stream2.Position = 0;
+
             while (true)
             {
                 int count1 = stream1.Read(buffer1, 0, bufferSize);

@@ -179,20 +179,25 @@
             _driver.Exists(Arg.Any<string>()).Returns(true);
             _driver.GetLength(Arg.Is("f1")).Returns(3);
             _driver.GetLength(Arg.Is("f3")).Returns(3);
-            var str1 = new MemoryStream(new byte[] {1, 2, 3});
-            var str2 = new MemoryStream(new byte[] {1, 2, 3});
-            _driver.Read(Arg.Is("f1")).Returns(str1);
-            _driver.Read(Arg.Is("f3")).Returns(str2);
+            _driver.GetLength(Arg.Is("f4")).Returns(3);
+            _driver.Read(Arg.Is("f1")).Returns(new MemoryStream(new byte[] { 1, 2, 3 }));
+            _driver.Read(Arg.Is("f3")).Returns(new MemoryStream(new byte[] { 1, 2, 3 }));
+            _driver.Read(Arg.Is("f4")).Returns(new MemoryStream(new byte[] { 1, 2, 3 }) { Position = 1 });
 
             var storage=new XmlStorage(_driver, index);
 
             index.Add(new StorageItem { FileName = "f1", Url = "url1" });
             index.Add(new StorageItem { FileName = "f2", Url = "url2" });
             index.Add(new StorageItem { FileName = "f3", Url = "url3" });
+            index.Add(new StorageItem { FileName = "f4", Url = "url4" });
             storage.Deduplication();
 
             Assert.IsTrue(index.Items.Any(x => x.FileName == "f2"));
-            Assert.IsTrue(index.Items.Count(x => x.FileName == "f1") == 2 || index.Items.Count(x => x.FileName == "f3") == 2);
+            Assert.IsTrue(
+                index.Items.Count(x => x.FileName == "f1") == 3 || 
+                index.Items.Count(x => x.FileName == "f3") == 3 ||
+                index.Items.Count(x => x.FileName == "f4") == 3
+                );
 
         }
     }
