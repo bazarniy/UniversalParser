@@ -47,42 +47,43 @@
 
         public static IEnumerable<string> GetClasses(this HtmlNode node)
         {
+            if (node == null) return Enumerable.Empty<string>();
             var classValue = node.GetAttributeValue(ClassAttribute, null);
             return string.IsNullOrEmpty(classValue) ? Enumerable.Empty<string>() : classValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static bool HasAttribute(this HtmlNode node, string attributeName)
         {
-            return node.HasAttributes && node.Attributes.Contains(attributeName);
+            return node != null && node.HasAttributes && node.Attributes.Contains(attributeName);
         }
 
         public static bool HasAttributeValue(this HtmlNode node, string attributeName, string value)
         {
-            return node.HasAttribute(attributeName) && node.Attributes[attributeName].Value == value;
+            return node != null && node.HasAttribute(attributeName) && node.Attributes[attributeName].Value == value;
         }
 
         public static bool HasAttributeValueCaseInsensitive(this HtmlNode node, string attributeName, string value)
         {
-            return node.HasAttribute(attributeName) && node.Attributes[attributeName].Value.ToUpperInvariant() == value.ToUpperInvariant();
+            return node != null && node.HasAttribute(attributeName) && node.Attributes[attributeName].Value.ToUpperInvariant() == value.ToUpperInvariant();
         }
 
         public static bool HasAttributeValue(this HtmlNode node, string attributeName, IEnumerable<string> value)
         {
-            return node.HasAttribute(attributeName) && value.Any(x => x == node.Attributes[attributeName].Value);
+            return node != null && node.HasAttribute(attributeName) && value.Any(x => x == node.Attributes[attributeName].Value);
         }
         public static bool HasAttributeValueCaseInsensitive(this HtmlNode node, string attributeName, IEnumerable<string> value)
         {
-            return node.HasAttribute(attributeName) && value.Any(x => x.ToUpperInvariant() == node.Attributes[attributeName].Value.ToUpperInvariant());
+            return node != null && node.HasAttribute(attributeName) && value.Any(x => x.ToUpperInvariant() == node.Attributes[attributeName].Value.ToUpperInvariant());
         }
 
         public static bool HasClassValue(this HtmlNode node, string value)
         {
-            return node.HasAttribute(ClassAttribute) && node.Attributes[ClassAttribute].Value.Contains(value);
+            return node != null && node.HasAttribute(ClassAttribute) && node.Attributes[ClassAttribute].Value.Contains(value);
         }
 
         public static bool HasClassValue(this HtmlNode node, IEnumerable<string> value)
         {
-            return node.HasAttribute(ClassAttribute) && value.Any(x => node.Attributes[ClassAttribute].Value.Contains(x));
+            return node != null && node.HasAttribute(ClassAttribute) && value.Any(x => node.Attributes[ClassAttribute].Value.Contains(x));
         }
 
         public static HtmlNode GetBody(this HtmlDocument html)

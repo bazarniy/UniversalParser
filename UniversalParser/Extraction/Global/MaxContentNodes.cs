@@ -1,5 +1,6 @@
 ﻿namespace Extraction.Global
 {
+    using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
@@ -14,22 +15,21 @@
         private static readonly string[] _badClasses = {"header", "footer"};
 
         private readonly ConcurrentDictionary<XPath, ContentLengthMetric> _metricBag = new ConcurrentDictionary<XPath, ContentLengthMetric>();
-        private readonly IDataReader _storage;
+        private readonly IEnumerable<DataInfo> _infos;
         private readonly int _percentFilter;
 
-        public MaxContentNodes(IDataReader storage, int percentFilter = 20)
+        public MaxContentNodes(IEnumerable<DataInfo> infos, int percentFilter = 20)
         {
-            _storage = storage;
+            _infos = infos;
             _percentFilter = percentFilter;
         }
 
-        public IEnumerable<XPath> GetNodes()
+        public IEnumerable<KeyValuePair<XPath, ContentLengthMetric>> GetNodes()
         {
-            EvaluateMetrics(_storage.GetInfos());
+            EvaluateMetrics(_infos);
             var filtered = FilterDepthNodes(_metricBag.Keys);
-            filtered = FilterMetrics(filtered, _storage.Count(), _percentFilter);
 
-            return filtered;
+            return FilterMetrics(filtered, _infos.Count(), _percentFilter).ToArray();
         }
 
         private void EvaluateMetrics(IEnumerable<DataInfo> infos)
@@ -43,15 +43,22 @@
             });
         }
 
-        private static Dictionary<XPath, ContentLengthMetric> EvaluateDocumentMetric(DataInfo info)
+        private static IEnumerable<KeyValuePair<XPath, ContentLengthMetric>> EvaluateDocumentMetric(DataInfo info)
         {
             var root = HtmlHelpers.GetBody(info.Data);
+
+            if (root == null) return Enumerable.Empty<KeyValuePair<XPath, ContentLengthMetric>>();
+
             FilterNodes(root);
 
             return root.GetAllTags()
                 .ToDictionary(x => x, x => x.GetClearTextLength())
                 .Where(x => x.Value > 0)
-                .ToDictionary(x => new XPath(x.Key), x => new ContentLengthMetric(x, info.Url));
+                .Select(x => new KeyValuePair<XPath, ContentLengthMetric>(
+                    new XPath(x.Key),
+                    new ContentLengthMetric(x, info.Url)));
+
+            //.ToDictionary(x => new XPath(x.Key), x => new ContentLengthMetric(x, info.Url));
         }
 
         private IEnumerable<XPath> FilterDepthNodes(IEnumerable<XPath> nodeCollection)
@@ -75,29 +82,36 @@
             return nodes.Except(nodesToRemove);
         }
 
-        private IEnumerable<XPath> FilterMetrics(IEnumerable<XPath> nodes, int documentCount, int percentFilter)
+        private IEnumerable<KeyValuePair<XPath, ContentLengthMetric>> FilterMetrics(IEnumerable<XPath> nodes, int documentCount, int percentFilter)
         {
             return _metricBag
                 .Where(x => nodes.Contains(x.Key))
                 .Where(x => x.Value.Num*100/documentCount >= percentFilter)
                 .Where(x => x.Value.Min != x.Value.Max)
-                .Where(x => x.Value.HasHTag && (x.Value.HasPTag || x.Value.HasTableTag))
-                .Select(x => x.Key);
+                .Where(x => x.Value.HasHTag && (x.Value.HasPTag || x.Value.HasTableTag));
+        }
+
+        private static int GetPercentage(double val)
+        {
+            return Convert.ToInt32(Math.Round(val));
         }
 
         private static void FilterNodes(HtmlNode node)
         {
+            if (node == null) return;
+
             if (node.HasClassValue(_badClasses))
             {
                 node.Remove();
                 return;
             }
 
-            foreach (var childNode in node.ChildNodes)
+            foreach (var childNode in node.ChildNodes.ToArray())
             {
                 if (childNode.HasClassValue(_badClasses))
                 {
-                    childNode.Remove();
+                    node.RemoveChild(childNode, false);
+                    //childNode.Remove();
                     continue;
                 }
                 FilterNodes(childNode);

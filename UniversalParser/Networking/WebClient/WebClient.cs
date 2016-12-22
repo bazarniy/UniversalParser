@@ -14,6 +14,7 @@
 
         public async Task<DataInfo> Download(Url url)
         {
+            //TODO: проверять content type перед закачкой
             var result = new DataInfo(url.ToString());
             byte[] rawdata;
             try

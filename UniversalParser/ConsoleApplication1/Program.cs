@@ -10,8 +10,10 @@ namespace ConsoleApplication1
     using System.Data;
     using System.IO;
     using System.Xml.Serialization;
+    using Base;
     using Base.Helpers;
     using Extraction.Common;
+    using Extraction.Global;
     using HtmlAgilityPack;
     using Networking;
     using Networking.WebClient;
@@ -20,6 +22,14 @@ namespace ConsoleApplication1
     class Program
     {
         static void Main(string[] args)
+        {
+            var storage = XmlStorage.GetStorage("iekru", "dwl");
+            var infos = storage.Enum().Select(u => new DataInfo(u, storage.ReadByUrl<string>(u)));
+            var metric = new MaxContentNodes(infos);
+            var nodes = metric.GetNodes();
+        }
+
+        private static void DownloadSite()
         {
             var storage = XmlStorage.GetStorage("iekru", "dwl");
             /*var loader = new DomainLoader(new WebClientFactory(), storage, "https://www.iek.ru");

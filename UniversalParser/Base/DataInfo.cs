@@ -12,10 +12,10 @@
         public string Data;
         public IEnumerable<Url> Links => HtmlHelpers.GetAllLinks(Data, Url);
 
-        public DataInfo(string url)
+        public DataInfo(string url, string data = null)
         {
             Url = url;
-            Data = null;
+            Data = data;
             Code = 200;
         }
     }

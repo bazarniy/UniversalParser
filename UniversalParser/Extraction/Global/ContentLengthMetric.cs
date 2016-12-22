@@ -5,7 +5,7 @@
     using Base.Helpers;
     using HtmlAgilityPack;
 
-    internal class ContentLengthMetric
+    public class ContentLengthMetric
     {
         private readonly Dictionary<string, int> _files = new Dictionary<string, int>();
 

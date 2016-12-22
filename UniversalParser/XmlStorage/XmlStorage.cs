@@ -59,6 +59,12 @@
             return Read<T>(new StorageItem { FileName = fileName });
         }
 
+        public T ReadByUrl<T>(string url) where T : class
+        {
+            url.ThrowIfEmpty(nameof(url));
+            return Read<T>(new StorageItem { Url = url });
+        }
+
         private T Read<T>(StorageItem item) where T : class
         {
             item = _index.Get(item);
