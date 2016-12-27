@@ -12,24 +12,22 @@
     {
         private readonly System.Net.WebClient _client = new System.Net.WebClient();
 
-        public async Task<DataInfo> Download(Url url)
+        public async Task<WebResult> Download(Url url)
         {
             //TODO: проверять content type перед закачкой
-            var result = new DataInfo(url.ToString());
-            byte[] rawdata;
+            var result = new WebResult {Url = url};
             try
             {
-                rawdata = await _client.DownloadDataTaskAsync(url.ToString());
+                var rawdata = await _client.DownloadDataTaskAsync(url.ToString());
+                result.Data = Encoding
+                    .GetEncoding(GetCharset() ?? Encoding.UTF8.WebName)
+                    .GetString(rawdata);
+                result.ErrorCode = 200;
             }
             catch (WebException ex) when (ex.Response is HttpWebResponse && ex.Status == WebExceptionStatus.ProtocolError && ex.Response != null)
             {
-                result.Code = GetStatusCode(ex);
-                return result;
+                result.ErrorCode = GetStatusCode(ex);
             }
-
-            result.Data = Encoding
-                .GetEncoding(GetCharset() ?? Encoding.UTF8.WebName)
-                .GetString(rawdata);
 
             return result;
         }

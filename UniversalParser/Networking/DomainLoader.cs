@@ -65,21 +65,20 @@
                     using (var client = _client.Create())
                     {
                         var result = await client.Download(link).ConfigureAwait(false);
-                        if (!result.Data.IsEmpty() && !result.Data.ToLowerInvariant().Contains("<html") && !result.Data.ToLowerInvariant().Contains("</html"))
+                        if (result.Data.IsEmpty() || !result.Data.ToLowerInvariant().Contains("<html"))
                         {
-                            result.Data = "";
+                            if (result.ErrorCode != 404) throw new ApplicationException($"Empty data. Page {link}. Code {result.ErrorCode}");
+                            return null;
                         }
+
+                        result.Data = _simplifier.Simplify(result.Data);
                         _queue.AddRange(
-                            result.Links
+                            HtmlHelpers.GetAllLinks(result.Data, result.Url)
                                 .Select(x => x.Fix())
                                 .Where(x => x != null && x.Domain == _domain.Domain)
                         );
-                        if (result.Data.IsEmpty())
-                        {
-                            if (result.Code != 404) throw new ApplicationException($"Empty data. Page {result.Url}. Code {result.Code}");
-                            return null;
-                        }
-                        _writer.Write(_simplifier.Simplify(result.Data), result.Url);
+                        
+                        _writer.Write(result.Data, result.Url.ToString());
                         return null;
                     }
                 }

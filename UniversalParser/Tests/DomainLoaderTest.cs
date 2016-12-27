@@ -49,7 +49,7 @@ namespace Tests
         [Test]
         public void StartDownload()
         {
-            _client.Download(Arg.Any<Url>()).Returns(DelayReturns(new DataInfo(TestDomain)));
+            _client.Download(Arg.Any<Url>()).Returns(DelayReturns(new WebResult { Url = Url.Create(TestDomain), ErrorCode = 200, Data = "" }));
 
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download());
@@ -99,7 +99,7 @@ namespace Tests
         [Test]
         public void Download404()
         {
-            _client.Download(Arg.Any<Url>()).Returns(new DataInfo(TestDomain) {Code = 404, Data = ""});
+            _client.Download(Arg.Any<Url>()).Returns(new WebResult {Url = Url.Create(TestDomain), ErrorCode = 404, Data = ""});
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download(1));
             Assert.IsNull(x.GetResults().First().Value);
@@ -108,7 +108,7 @@ namespace Tests
         [Test]
         public void DownloadEmpty()
         {
-            _client.Download(Arg.Any<Url>()).Returns(new DataInfo(TestDomain) { Code = 200, Data = "" });
+            _client.Download(Arg.Any<Url>()).Returns(new WebResult { Url = Url.Create(TestDomain), ErrorCode = 200, Data = "" });
             var x = GetNewDomainLoader;
             Assert.DoesNotThrowAsync(() => x.Download(1));
             Assert.NotNull(x.GetResults().First().Value);
@@ -120,7 +120,7 @@ namespace Tests
             Assert.DoesNotThrow(() => GetNewDomainLoader.GetResults());
         }
 
-        private static Task<DataInfo> DelayReturns(DataInfo info)
+        private static Task<T> DelayReturns<T>(T info)
         {
             return Task.Run(async () =>
             {
