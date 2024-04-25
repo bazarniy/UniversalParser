@@ -11,6 +11,7 @@
         private readonly IStorageDriver _driver;
         private readonly IStorageIndex _index;
 
+//test
         public XmlStorage(IStorageDriver storageDriver, IStorageIndex index)
         {
             storageDriver.ThrowIfNull(nameof(storageDriver));
